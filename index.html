@@ -394,8 +394,8 @@
         }
 
         function updateUI() {
-            document.getElementById('score-display').innerText = '⭐ ${currentTeamProgress.score} XP';
-            document.getElementById('level-display').innerText = 'Уровень ${currentTeamProgress.current_level + 1}';
+            document.getElementById('score-display').innerText = 'XP: ' + currentTeamProgress.score;
+			document.getElementById('level-display').innerText = 'Уровень ' + (currentTeamProgress.current_level + 1);
 
             const lvl = currentTeamProgress.current_level;
             const imgWrap = document.getElementById('quest-img-wrapper');
@@ -409,7 +409,7 @@
             }
 
             if (lvl >= questsList.length) {
-                document.getElementById('quest-title').innerText = "🏆 ФИНИШ КВЕСТА!";
+                document.getElementById('quest-title').innerText = "ФИНИШ КВЕСТА!";
                 document.getElementById('quest-desc').innerText = "Вы дешифровали все точки города! Поздравляем!";
                 imgWrap.classList.add('hidden');
                 return;
