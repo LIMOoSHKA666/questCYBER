@@ -740,7 +740,7 @@
             const hint = document.getElementById('new-q-hint').value.trim();
             const code = document.getElementById('new-q-code').value.trim().toUpperCase();
 
-            if (!t  !d  !code) {
+            if (!t || !d || !code) {
                 showToast("ЗАПОЛНИТЕ НАЗВАНИЕ, ОПИСАНИЕ И КОД!");
                 return;
             }
