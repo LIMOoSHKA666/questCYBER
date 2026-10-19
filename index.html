@@ -218,7 +218,7 @@
         const SUPABASE_URL = "https://rlzjtnxxlwuyaxnmhbuh.supabase.co";
         const SUPABASE_KEY = "sb_publishable_IkTNtMC48k8dGfysNQoi7w_Gss24MKo";
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+       	supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 		// Данные текущего игрока из Telegram
         const tgUser = tg.initDataUnsafe?.user || { id: "test_player_1", first_name: "Игрок Сталкер" };
         let currentTeamProgress = { current_level: 0, score: 0 };
