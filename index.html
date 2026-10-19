@@ -664,9 +664,13 @@
             let html = "";
             for (let i = 0; i < res.data.length; i++) {
                 const t = res.data[i];
+                const teamTitle = t.team_name || "Команда";
+                const teamLvl = (t.current_level || 0) + 1;
+                const teamScore = t.score || 0;
+
                 html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:6px 0; font-size:11px;">' +
-                        '<span>' + (i + 1) + '. <b>' + (t.team_name  "Команда") + '</b> (Точка ' + (t.current_level  0) + ')</span>' +
-                        '<span style="color:var(--accent-cyan); font-weight:bold;">' + (t.score || 0) + ' XP</span>' +
+                        '<span>' + (i + 1) + '. <b>' + teamTitle + '</b> (Точка ' + teamLvl + ')</span>' +
+                        '<span style="color:var(--accent-cyan); font-weight:bold;">' + teamScore + ' XP</span>' +
                         '</div>';
             }
             container.innerHTML = html;
