@@ -437,15 +437,21 @@
 
         function renderCloudQuestsList() {
             const box = document.getElementById('cloud-quest-list');
+            if (!box) return;
+
             if (questsList.length === 0) {
                 box.innerHTML = "База пуста";
                 return;
             }
-            box.innerHTML = questsList.map((q, i) => '
-                <div style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <b>${i + 1}. ${q.title}</b> (Код: ${q.secret_code})
-                </div>
-            ).join('');
+
+            let html = "";
+            for (let i = 0; i < questsList.length; i++) {
+                const q = questsList[i];
+                html += '<div style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);">' +
+                        '<b>' + (i + 1) + '. ' + q.title + '</b> (Код: ' + q.secret_code + ')' +
+                        '</div>';
+            }
+            box.innerHTML = html;
         }
 
         function switchTab(tab) {
