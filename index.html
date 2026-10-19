@@ -399,7 +399,7 @@
             await loadPlayerProgress();
 
             const capEl = document.getElementById('lobby-captain-name');
-            if (capEl) capEl.innerText = currentTeamProgress.team_name  tgUser.first_name  "Сталкер";
+            if (capEl) capEl.innerText = currentTeamProgress.team_name || (tgUser.first_name) || "Сталкер";
 
             const now = Date.now();
             if (QUEST_START_DATE && now < QUEST_START_DATE) {
