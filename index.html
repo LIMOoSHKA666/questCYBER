@@ -372,30 +372,38 @@
                 .subscribe();
         }
 
-        async function loadLeaderboard() {
-            const { data } = await supabase
+        [19.10.2026 20:13] Евгений: async function loadLeaderboard() {
+            const result = await supabase
                 .from('teams_progress')
                 .select('*')
                 .order('score', { ascending: false })
                 .limit(10);
 
+            const data = result.data;
             const container = document.getElementById('leaderboard-list');
+            if (!container) return;
+
             if (!data || data.length === 0) {
                 container.innerHTML = "Пока нет результатов";
                 return;
             }
 
-            container.innerHTML = data.map((t, idx) => '
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:6px 0; font-size:11px;">
-                    <span>${idx + 1}. <b>${t.team_name}</b> (Ур. ${t.current_level + 1})</span>
-                    <span style="color:var(--accent-cyan); font-weight:bold;">${t.score} XP</span>
-                </div>
-            ').join('');
+            let html = "";
+            for (let i = 0; i < data.length; i++) {
+                const t = data[i];
+                html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:6px 0; font-size:11px;">' +
+                        '<span>' + (i + 1) + '. <b>' + t.team_name + '</b> (Ур. ' + (t.current_level + 1) + ')</span>' +
+                        '<span style="color:var(--accent-cyan); font-weight:bold;">' + t.score + ' XP</span>' +
+                        '</div>';
+            }
+            container.innerHTML = html;
         }
 
         function updateUI() {
-            document.getElementById('score-display').innerText = 'XP: ' + currentTeamProgress.score;
-			document.getElementById('level-display').innerText = 'Уровень ' + (currentTeamProgress.current_level + 1);
+            const scoreEl = document.getElementById('score-display');
+            const levelEl = document.getElementById('level-display');
+            if (scoreEl) scoreEl.innerText = "XP: " + currentTeamProgress.score;
+            if (levelEl) levelEl.innerText = "Уровень " + (currentTeamProgress.current_level + 1);
 
             const lvl = currentTeamProgress.current_level;
             const imgWrap = document.getElementById('quest-img-wrapper');
@@ -404,24 +412,25 @@
             if (questsList.length === 0) {
                 document.getElementById('quest-title').innerText = "КВЕСТЫ НЕ НАЙДЕНЫ";
                 document.getElementById('quest-desc').innerText = "Организатор еще не добавил задания в базу.";
-                imgWrap.classList.add('hidden');
+                if (imgWrap) imgWrap.classList.add('hidden');
                 return;
             }
 
             if (lvl >= questsList.length) {
                 document.getElementById('quest-title').innerText = "ФИНИШ КВЕСТА!";
                 document.getElementById('quest-desc').innerText = "Вы дешифровали все точки города! Поздравляем!";
-                imgWrap.classList.add('hidden');
+                if (imgWrap) imgWrap.classList.add('hidden');
                 return;
             }
 
             const q = questsList[lvl];
             document.getElementById('quest-title').innerText = q.title;
             document.getElementById('quest-desc').innerText = q.description;
-			if (q.image_url) {
+
+            if (q.image_url && imgEl && imgWrap) {
                 imgEl.src = q.image_url;
                 imgWrap.classList.remove('hidden');
-            } else {
+            } else if (imgWrap) {
                 imgWrap.classList.add('hidden');
             }
         }
