@@ -2,112 +2,127 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Urban Quest: Realtime Edition</title>
-    <!-- Telegram WebApp SDK -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Городской Квест</title>
+    <!-- Подключение библиотек -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         :root {
             --bg-color: #0b0f19;
-            --card-bg: rgba(26, 37, 58, 0.5);
-            --border-glow: rgba(0, 242, 254, 0.2);
+            --card-bg: rgba(23, 32, 54, 0.7);
             --accent-cyan: #00f2fe;
             --accent-purple: #9d4edd;
+            --success-neon: #00ff88;
             --text-main: #f8fafc;
-            --text-muted: #708090;
-            --danger-neon: #ff0055;
-            --success-neon: #39ff14;
+            --text-muted: #64748b;
+            --border-glow: rgba(0, 242, 254, 0.2);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
-            font-family: 'Courier New', Courier, monospace, system-ui;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(157, 78, 221, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(0, 242, 254, 0.1) 0px, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 70px;
+        }
+
+        .screen {
             padding: 16px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            flex-grow: 1;
         }
 
-        .screen { display: flex; flex-direction: column; gap: 12px; flex-grow: 1; }
-        .hidden { display: none !important; }
+        .hidden {
+            display: none !important;
+        }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 10px 14px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-glow);
             font-size: 11px;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-glow);
-            padding-bottom: 6px;
+            letter-spacing: 0.5px;
         }
 
         .card {
             background: var(--card-bg);
-            border: 1px solid var(--border-glow);
             border-radius: 12px;
             padding: 14px;
-            backdrop-filter: blur(8px);
-        }
-
-        .quest-image-container {
-            width: 100%;
-            height: 160px;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 10px;
             border: 1px solid var(--border-glow);
-        }
-
-        .quest-image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            backdrop-filter: blur(10px);
         }
 
         .btn {
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            color: var(--bg-color);
+            color: #fff;
             border: none;
+            padding: 12px;
             border-radius: 8px;
-            padding: 10px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
-            text-transform: uppercase;
             cursor: pointer;
             width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.2s;
         }
-        .btn:active { transform: scale(0.98); }
-        .btn-secondary { background: transparent; color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
-        .btn-danger { background: var(--danger-neon); color: #fff; }
 
-        input, textarea {
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glow);
+            color: var(--text-main);
+        }
+
+        input, textarea, select {
             width: 100%;
-            padding: 8px 10px;
+            padding: 10px 12px;
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--border-glow);
-            border-radius: 6px;
-            color: var(--accent-cyan);
+            border-radius: 8px;
+            color: var(--text-main);
             font-size: 12px;
             font-family: inherit;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
         }
 
         .footer {
-            margin-top: auto;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(11, 15, 25, 0.95);
+            backdrop-filter: blur(10px);
             border-top: 1px solid var(--border-glow);
-            padding-top: 10px;
             display: flex;
             justify-content: space-around;
+            align-items: center;
+            z-index: 100;
         }
 
         .tab-btn {
@@ -115,323 +130,641 @@
             border: none;
             color: var(--text-muted);
             font-size: 10px;
-            text-transform: uppercase;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
             cursor: pointer;
         }
-        .tab-btn.active { color: var(--accent-cyan); text-shadow: 0 0 5px rgba(0, 242, 254, 0.5); }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+        }
 
         .toast {
             position: fixed;
-            bottom: 20px;
+            top: 20px;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: rgba(11, 15, 25, 0.95);
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
             border: 1px solid var(--accent-cyan);
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 11px;
             color: var(--accent-cyan);
-            transition: transform 0.3s;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
             z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
         }
-        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        .toast.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
 
-    <!-- 1. ИГРОВОЙ ЭКРАН -->
-    <div id="game-screen" class="screen">
+    <!-- 1. ЭКРАН ТАЙМЕРА И АНОНСА -->
+    <div id="countdown-screen" class="screen">
         <div class="header">
-            <span id="player-status">🟢 В СЕТИ</span>
-            <div><span id="score-display">⭐ 0 XP</span> | <span id="level-display">Уровень 1</span></div>
+            <span style="color:var(--accent-cyan);">⚡ ГОРОДСКОЙ КВЕСТ: АНОНС</span>
+            <span style="color:var(--success-neon);">🟢 ГОТОВ К СТАРТУ</span>
         </div>
 
-        <div class="card" id="task-card">
-            <h2 id="quest-title" style="color:var(--accent-cyan); font-size:13px; margin-bottom:8px;">ЗАГРУЗКА ИЗ БАЗЫ...</h2>
-            
-            <div id="quest-img-wrapper" class="quest-image-container hidden">
-                <img id="quest-image-display" src="" alt="Фото локации">
+        <div class="card" style="text-align: center; padding: 24px 14px;">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">ДО СТАРТА ИГРЫ ОСТАЛОСЬ</div>
+            <div id="countdown-timer" style="font-size: 26px; font-weight: bold; color: var(--accent-cyan); letter-spacing: 2px;">
+                --:--:--
+            </div>
+            <div style="font-size: 9px; color: var(--text-muted); margin-top: 4px;">ДНЕЙ : ЧАСОВ : МИНУТ : СЕКУНД</div>
+        </div>
+
+        <div class="card">
+            <h3 style="color:var(--accent-purple); font-size: 12px; margin-bottom: 8px;">📢 БРИФИНГ И ПРАВИЛА</h3>
+            <p id="announcement-text" style="font-size: 11px; line-height: 1.5; color: #cbd5e1;">
+                Команды получают координаты и ориентиры контрольных точек. 
+                Доберитесь до локации, найдите секретный код и введите его в терминал.
+                Каждая точка открывает доступ к следующему заданию цепочки!
+            </p>
+        </div>
+
+        <div class="card" style="font-size: 11px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="color:var(--text-muted);">Игрок:</span>
+                <b id="lobby-captain-name">Загрузка...</b>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:var(--text-muted);">Статус:</span>
+                <b style="color:var(--accent-cyan);" id="game-status-label">ОЖИДАНИЕ СТАРТА</b>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="forceStartGame()" style="margin-top:auto;">
+            ⏩ ВОЙТИ В КВЕСТ СЕЙЧАС (ТЕСТ)
+        </button>
+    </div>
+
+    <!-- 2. ИГРОВОЙ ЭКРАН (ЛИНЕЙНАЯ ЦЕПОЧКА ТОЧЕК) -->
+    <div id="game-screen" class="screen hidden">
+        <div class="header">
+            <span id="level-display" style="color:var(--accent-cyan); font-weight:bold;">ТОЧКА 1 ИЗ ?</span>
+            <span id="score-display" style="color:var(--accent-purple); font-weight:bold;">XP: 0</span>
+        </div>
+
+        <!-- Карточка активной цели -->
+        <div id="active-quest-box" class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:10px; color:var(--accent-cyan); font-weight:bold;">🎯 ТЕКУЩАЯ ЦЕЛЬ</span>
+                <span style="font-size:10px; font-weight:bold; color:var(--accent-purple);">+100 XP</span>
             </div>
 
-            <p id="quest-desc" style="font-size:12px; margin-bottom:12px;">Синхронизация данных с сервером...</p>
+            <h3 id="quest-title" style="color:var(--text-main); font-size:15px; margin-bottom:8px;">Загрузка точки...</h3>
+            
+            <p id="quest-desc" style="font-size:12px; color:#cbd5e1; line-height:1.45; margin-bottom:12px;">
+                Получение ориентиров...
+            </p>
+
+            <div id="quest-img-wrapper" class="hidden" style="margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid var(--border-glow);">
+                <img id="quest-image-display" src="" alt="Ориентир" style="width:100%; max-height:220px; object-fit:cover; display:block;">
+            </div>
+			<div id="quest-hint-box" class="hidden" style="background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:6px; font-size:11px; color:#94a3b8; margin-bottom:6px; border-left:2px solid var(--accent-cyan);">
+                💡 <b>Подсказка:</b> <span id="quest-hint-text"></span>
+            </div>
         </div>
 
-        <div class="card">
-            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:6px;">ВВОД ШИФРА ЛОКАЦИИ</label>
-            <input type="text" id="code-input" placeholder="ВВЕДИТЕ НАЙДЕННЫЙ КОД" autocomplete="off">
-            <button class="btn" onclick="submitCode()">⚡ АКТИВИРОВАТЬ КОД</button>
+        <!-- Ввод секретного шифра -->
+        <div id="quest-input-box" class="card">
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:6px;">КОД С ОБЪЕКТА</label>
+            <input type="text" id="code-input" placeholder="Введите код (например, CITY-101)" style="text-transform:uppercase;">
+            <button class="btn" onclick="submitCurrentPointCode()">⚡ ДЕШИФРОВАТЬ И ОТКРЫТЬ СЛЕДУЮЩУЮ</button>
         </div>
 
-        <button class="btn btn-secondary" onclick="requestHint()">💡 ПОДСКАЗКА (-50 XP)</button>
+        <!-- Экран финиша всех точек -->
+        <div id="quest-finish-box" class="card hidden" style="text-align:center; padding:24px 14px;">
+            <div style="font-size:40px; margin-bottom:10px;">🏆</div>
+            <h2 style="color:var(--accent-cyan); font-size:16px; margin-bottom:8px;">МАРШРУТ ПОЛНОСТЬЮ ПРОЙДЕН!</h2>
+            <p style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:14px;">
+                Все точки города найдены и расшифрованы!
+            </p>
+            <button class="btn" onclick="switchTab('lead')">📊 ПОСМОТРЕТЬ ИТОГОВЫЙ ТОП</button>
+        </div>
+
+        <div class="card" style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;">
+            <span>Прогресс цепочки:</span>
+            <span id="route-progress-text" style="color:var(--accent-cyan); font-weight:bold;">0 / 0</span>
+        </div>
     </div>
 
-    <!-- 2. ЭКРАН СОЗДАНИЯ (ОРГАНИЗАТОР / АДМИН) -->
-    <div id="admin-screen" class="screen hidden">
-        <div class="header">
-            <span style="color:var(--accent-purple);">ОБЛАЧНЫЙ РЕДАКТОР КВЕСТОВ</span>
-        </div>
-
-        <div class="card">
-            <h3 style="color:var(--accent-cyan); font-size:12px; margin-bottom:8px;">🆕 СОЗДАТЬ ТОЧКУ В SUPABASE</h3>
-            <input type="text" id="adm-title" placeholder="Название точки">
-            <textarea id="adm-desc" placeholder="Описание задания и ориентиры"></textarea>
-            <input type="text" id="adm-img" placeholder="Ссылка на фото (URL)">
-            <input type="text" id="adm-code" placeholder="Секретный код (например: CITY-777)">
-            <input type="text" id="adm-hint" placeholder="Подсказка для игроков">
-            <button class="btn" onclick="saveQuestToCloud()">☁️ СОХРАНИТЬ В ОБЛАКО</button>
-        </div>
-
-        <div class="card">
-            <h3 style="font-size:12px; margin-bottom:8px;">📋 ВСЕ ТОЧКИ ИЗ БАЗЫ</h3>
-            <div id="cloud-quest-list" style="font-size:11px;"></div>
-        </div>
-    </div>
-
-    <!-- 3. ТУРНИРНАЯ ТАБЛИЦА (РЕАЛТАЙМ) -->
+    <!-- 3. ЭКРАН ТАБЛИЦЫ ЛИДЕРОВ -->
     <div id="leaderboard-screen" class="screen hidden">
         <div class="header">
-            <span style="color:var(--accent-cyan);">🏆 ОБЩИЙ ЗАЧЕТ КОМАНД</span>
+            <span style="color:var(--accent-cyan);">🏆 РЕЙТИНГ КОМАНД</span>
+            <span style="color:var(--text-muted);">TOP-10</span>
         </div>
         <div class="card">
-            <div id="leaderboard-list" style="display:flex; flex-direction:column; gap:8px;">
-                Загрузка топа...
+            <div id="leaderboard-list" style="display:flex; flex-direction:column; gap:6px;">
+                Загрузка результатов...
             </div>
         </div>
     </div>
 
-    <!-- Навигация -->
+    <!-- 4. ЭКРАН ПРОФИЛЯ ИГРОКА -->
+    <div id="profile-screen" class="screen hidden">
+        <div class="header">
+            <span style="color:var(--accent-cyan);">👤 ДОСЬЕ ИГРОКА</span>
+            <span id="profile-tg-id" style="font-size:10px; color:var(--text-muted);">ID: ---</span>
+        </div>
+
+        <div class="card" style="text-align:center;">
+            <div id="profile-avatar-icon" style="font-size:42px; margin-bottom:6px;">🕵️‍♂️</div>
+            <h3 id="profile-display-name" style="color:var(--accent-cyan); font-size:14px; margin-bottom:4px;">Позывной</h3>
+            <div id="profile-role-badge" style="font-size:10px; color:var(--accent-purple); text-transform:uppercase; margin-bottom:12px;">Разведчик</div>
+
+            <div style="display:flex; justify-content:space-around; background:rgba(0,0,0,0.3); border-radius:8px; padding:10px; border:1px solid var(--border-glow);">
+                <div>
+                    <div style="font-size:9px; color:var(--text-muted);">ТОЧКА</div>
+                    <div id="profile-level" style="font-size:14px; font-weight:bold;">1</div>
+                </div>
+                <div>
+                    <div style="font-size:9px; color:var(--text-muted);">ОЧКИ XP</div>
+                    <div id="profile-xp" style="font-size:14px; font-weight:bold; color:var(--accent-cyan);">0</div>
+                </div>
+                <div>
+                    <div style="font-size:9px; color:var(--text-muted);">СТАТУС</div>
+                    <div style="font-size:12px; font-weight:bold; color:var(--success-neon);">АКТИВЕН</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h4 style="font-size:11px; color:var(--accent-cyan); margin-bottom:10px;">✏️ РЕДАКТИРОВАТЬ ДАННЫЕ</h4>
+
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">НАЗВАНИЕ КОМАНДЫ / ПОЗЫВНОЙ</label>
+            <input type="text" id="input-team-name" placeholder="Введите позывной" maxlength="25">
+
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">СПЕЦИАЛИЗАЦИЯ</label>
+            <select id="select-role">
+                <option value="🕵️‍♂️|Разведчик">🕵️‍♂️ Разведчик (Скорость поиска)</option>
+                <option value="💻|Кибер-Хакер">💻 Кибер-Хакер (Дешифровка кодов)</option>
+                <option value="🧭|Штурман">🧭 Штурман (Ориентирование)</option>
+                <option value="⚡|Инженер">⚡ Инженер (Оптимизация)</option>
+            </select>
+
+            <button class="btn" onclick="savePlayerProfile()">💾 СОХРАНИТЬ ПРОФИЛЬ</button>
+        </div>
+    </div>
+
+    <!-- 5. ЭКРАН ОРГАНИЗАТОРА (РЕДАКТОР) -->
+    <div id="admin-screen" class="screen hidden">
+        <div class="header">
+            <span style="color:var(--accent-purple);">⚙️ ПАНЕЛЬ ОРГАНИЗАТОРА</span>
+        </div>
+
+        <!-- Настройка таймера старта -->
+        <div class="card">
+            <h3 style="color:var(--accent-cyan); font-size:12px; margin-bottom:8px;">⏱️ НАСТРОЙКА СТАРТА ИГРЫ</h3>
+            
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">ДАТА И ВРЕМЯ НАЧАЛА</label>
+            <input type="datetime-local" id="adm-start-time" style="color-scheme: dark;">
+
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">ТЕКСТ БРИФИНГА</label>
+            <textarea id="adm-announcement-input" rows="2" placeholder="Введите правила и условия..."></textarea>
+
+            <button class="btn" onclick="saveQuestStartTime()">💾 УСТАНОВИТЬ ВРЕМЯ СТАРТА</button>
+        </div>
+
+        <!-- Добавление новой точки -->
+        <div class="card">
+            <h3 style="color:var(--accent-cyan); font-size:12px; margin-bottom:8px;">➕ ДОБАВИТЬ НОВУЮ ТОЧКУ</h3>
+            <input type="text" id="new-q-title" placeholder="Название точки (напр. Памятник)">
+            <textarea id="new-q-desc" rows="2" placeholder="Описание и где искать код"></textarea>
+            <input type="text" id="new-q-img" placeholder="Прямая ссылка на фото (URL)">
+            <input type="text" id="new-q-hint" placeholder="Подсказка (необязательно)">
+            <input type="text" id="new-q-code" placeholder="Секретный код для зачета" style="text-transform:uppercase;">
+            <button class="btn" onclick="addNewQuestPoint()">☁️ СОХРАНИТЬ ТОЧКУ В БАЗУ</button>
+        </div>
+
+        <div class="card">
+            <h4 style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">ТОЧКИ В БАЗЕ (ПО ПОРЯДКУ):</h4>
+            <div id="cloud-quest-list" style="font-size:11px; display:flex; flex-direction:column; gap:4px;">
+                Загрузка...
+            </div>
+        </div>
+    </div>
+
+    <!-- НАВИГАЦИЯ (ФУТЕР) -->
     <div class="footer">
         <button class="tab-btn active" id="tab-game" onclick="switchTab('game')">🎮 ИГРА</button>
         <button class="tab-btn" id="tab-lead" onclick="switchTab('lead')">🏆 ТОП</button>
+        <button class="tab-btn" id="tab-profile" onclick="switchTab('profile')">👤 ПРОФИЛЬ</button>
         <button class="tab-btn" id="tab-admin" onclick="switchTab('admin')">⚙️ РЕДАКТОР</button>
     </div>
 
     <div id="toast" class="toast">Готово</div>
 
+    <!-- ОСНОВНОЙ СКРИПТ -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // -------------------------------------------------------------
-        // ВСТАВЬТЕ ВАШИ ДАННЫЕ ИЗ SUPABASE:
-        // -------------------------------------------------------------
+        // Данные проекта Supabase
         const SUPABASE_URL = "https://rlzjtnxxlwuyaxnmhbuh.supabase.co";
         const SUPABASE_KEY = "sb_publishable_IkTNtMC48k8dGfysNQoi7w_Gss24MKo";
 
-       	supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-		// Данные текущего игрока из Telegram
+        // Присвоение без const во избежание конфликта имен CDN
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+		// Пользователь
         const tgUser = tg.initDataUnsafe?.user || { id: "test_player_1", first_name: "Игрок Сталкер" };
         let currentTeamProgress = { current_level: 0, score: 0 };
         let questsList = [];
+        let QUEST_START_DATE = null;
+        let countdownInterval = null;
 
-        // 1. Инициализация и загрузка данных
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            t.innerText = text;
+            t.classList.add('show');
+            setTimeout(function() { t.classList.remove('show'); }, 2000);
+        }
+
+        // 1. Инициализация приложения
         async function initApp() {
             showToast("СВЯЗЬ С ОБЛАКОМ...");
+            await loadQuestSettings();
             await loadQuests();
             await loadPlayerProgress();
-            updateUI();
+
+            const capEl = document.getElementById('lobby-captain-name');
+            if (capEl) capEl.innerText = currentTeamProgress.team_name  tgUser.first_name  "Сталкер";
+
+            const now = Date.now();
+            if (QUEST_START_DATE && now < QUEST_START_DATE) {
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('countdown-screen').classList.remove('hidden');
+                startCountdown();
+            } else {
+                startGameView();
+            }
+
             listenRealtime();
         }
 
-        // Загрузка квестов из Supabase
+        // 2. Настройки времени и брифинга
+        async function loadQuestSettings() {
+            const res = await supabase
+                .from('quest_settings')
+                .select('*')
+                .eq('id', 'main')
+                .maybeSingle();
+
+            if (res.data) {
+                QUEST_START_DATE = new Date(res.data.start_time).getTime();
+                const announceEl = document.getElementById('announcement-text');
+                if (announceEl && res.data.announcement_text) {
+                    announceEl.innerText = res.data.announcement_text;
+                }
+                const inputTime = document.getElementById('adm-start-time');
+                if (inputTime) {
+                    const localIso = new Date(QUEST_START_DATE - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    inputTime.value = localIso;
+                }
+                const inputAnn = document.getElementById('adm-announcement-input');
+                if (inputAnn && res.data.announcement_text) {
+                    inputAnn.value = res.data.announcement_text;
+                }
+            } else {
+                QUEST_START_DATE = Date.now() + 3600000;
+            }
+        }
+
+        async function saveQuestStartTime() {
+            const inputTime = document.getElementById('adm-start-time').value;
+            const ann = document.getElementById('adm-announcement-input').value.trim();
+
+            if (!inputTime) {
+                showToast("ВЫБЕРИТЕ ДАТУ И ВРЕМЯ!");
+                return;
+            }
+
+            const targetIso = new Date(inputTime).toISOString();
+            showToast("СОХРАНЕНИЕ...");
+
+            const res = await supabase
+                .from('quest_settings')
+                .upsert({
+                    id: 'main',
+                    start_time: targetIso,
+                    announcement_text: ann || undefined
+                });
+
+            if (!res.error) {
+                QUEST_START_DATE = new Date(inputTime).getTime();
+                showToast("ВРЕМЯ СТАРТА ОБНОВЛЕНО!");
+                startCountdown();
+            } else {
+                showToast("ОШИБКА СОХРАНЕНИЯ");
+            }
+        }
+
+        // 3. Таймер отсчета
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            const timerEl = document.getElementById('countdown-timer');
+
+            function tick() {
+                const now = Date.now();
+                const diff = QUEST_START_DATE - now;
+
+                if (diff <= 0) {
+                    clearInterval(countdownInterval);
+                    if (timerEl) timerEl.innerText = "00:00:00";
+                    document.getElementById('game-status-label').innerText = "ИГРА НАЧАЛАСЬ!";
+                    showToast("КВЕСТ НАЧАЛСЯ!");
+                    setTimeout(startGameView, 1000);
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                const pad = function(n) { return String(n).padStart(2, '0'); };
+                if (timerEl) {
+                    timerEl.innerText = pad(days) + "д " + pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
+                }
+            }
+
+            tick();
+            countdownInterval = setInterval(tick, 1000);
+        }
+
+        function startGameView() {
+            document.getElementById('countdown-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            updateUI();
+        }
+
+        function forceStartGame() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            startGameView();
+        }
+
+        // 4. Загрузка квестов и прогресса игрока
         async function loadQuests() {
-            const { data, error } = await supabase
+            const res = await supabase
                 .from('quests')
                 .select('*')
                 .order('created_at', { ascending: true });
 
-            if (!error && data) {
-                questsList = data;
+            if (!res.error && res.data) {
+                questsList = res.data;
             }
         }
 
-        // Загрузка прогресса игрока
         async function loadPlayerProgress() {
-            const { data, error } = await supabase
+            const res = await supabase
                 .from('teams_progress')
                 .select('*')
                 .eq('user_id', String(tgUser.id))
-                .single();
+                .maybeSingle();
 
-            if (data) {
-                currentTeamProgress = data;
+            if (res.data) {
+                currentTeamProgress = res.data;
             } else {
-                // Если игрока еще нет в базе, регистрируем его
-                const newProgress = {
+                currentTeamProgress = {
                     user_id: String(tgUser.id),
-                    team_name: tgUser.first_name || "Команда Сталкер",
+                    team_name: tgUser.first_name || "Сталкер",
                     current_level: 0,
                     score: 0
                 };
-                await supabase.from('teams_progress').insert(newProgress);
-                currentTeamProgress = newProgress;
+                await supabase.from('teams_progress').insert([currentTeamProgress]);
             }
         }
 
-        // 2. Логика проверки кода
-        async function submitCode() {
-            if (questsList.length === 0) return;
-            const lvl = currentTeamProgress.current_level;
+        // 5. Пошаговое линейное отображение текущей цели
+        function updateUI() {
+            const lvl = currentTeamProgress.current_level || 0;
+            const total = questsList.length;
 
-            if (lvl >= questsList.length) {
-                showToast("ВСЕ ЗАДАНИЯ ПРОЙДЕНЫ!");
+            const scoreEl = document.getElementById('score-display');
+            const levelEl = document.getElementById('level-display');
+            const progressEl = document.getElementById('route-progress-text');
+
+            const activeBox = document.getElementById('active-quest-box');
+            const inputBox = document.getElementById('quest-input-box');
+            const finishBox = document.getElementById('quest-finish-box');
+
+            if (scoreEl) scoreEl.innerText = "XP: " + (currentTeamProgress.score || 0);
+            if (progressEl) progressEl.innerText = lvl + " / " + total + " пройдено";
+
+            if (total === 0) {
+                if (levelEl) levelEl.innerText = "ОЖИДАНИЕ...";
+                document.getElementById('quest-title').innerText = "КВЕСТЫ НЕ НАЙДЕНЫ";
+                document.getElementById('quest-desc').innerText = "Организатор еще не добавил задания.";
+                document.getElementById('quest-img-wrapper').classList.add('hidden');
+                inputBox.classList.add('hidden');
                 return;
             }
 
-            const currentQuest = questsList[lvl];
-            const entered = document.getElementById('code-input').value.trim().toUpperCase();
+            // Финиш: все точки пройдены
+            if (lvl >= total) {
+                if (levelEl) levelEl.innerText = "ФИНИШ";
+                activeBox.classList.add('hidden');
+                inputBox.classList.add('hidden');
+                finishBox.classList.remove('hidden');
+                return;
+            }
 
-            if (entered === currentQuest.secret_code.toUpperCase()) {
-                tg.HapticFeedback.notificationOccurred('success');
-                currentTeamProgress.current_level += 1;
-                currentTeamProgress.score += 100;
-                document.getElementById('code-input').value = '';
+            activeBox.classList.remove('hidden');
+            inputBox.classList.remove('hidden');
+            finishBox.classList.add('hidden');
+			const cur = questsList[lvl];
+            if (levelEl) levelEl.innerText = "ТОЧКА " + (lvl + 1) + " ИЗ " + total;
+            document.getElementById('quest-title').innerText = (lvl + 1) + ". " + cur.title;
+            document.getElementById('quest-desc').innerText = cur.description;
 
-                // Обновляем прогресс в облаке Supabase
+            const imgWrap = document.getElementById('quest-img-wrapper');
+            const imgEl = document.getElementById('quest-image-display');
+            if (cur.image_url && imgEl && imgWrap) {
+                imgEl.src = cur.image_url;
+                imgWrap.classList.remove('hidden');
+            } else if (imgWrap) {
+                imgWrap.classList.add('hidden');
+            }
+
+            const hintBox = document.getElementById('quest-hint-box');
+            const hintText = document.getElementById('quest-hint-text');
+            if (cur.hint && hintBox && hintText) {
+                hintText.innerText = cur.hint;
+                hintBox.classList.remove('hidden');
+            } else if (hintBox) {
+                hintBox.classList.add('hidden');
+            }
+        }
+
+        // Проверка введенного кода
+        async function submitCurrentPointCode() {
+            const lvl = currentTeamProgress.current_level || 0;
+            if (lvl >= questsList.length) return;
+
+            const cur = questsList[lvl];
+            const inp = document.getElementById('code-input');
+            const val = inp ? inp.value.trim().toUpperCase() : '';
+
+            if (!val) {
+                showToast("ВВЕДИТЕ КОД!");
+                return;
+            }
+
+            if (val === String(cur.secret_code).trim().toUpperCase()) {
+                tg.HapticFeedback?.notificationOccurred('success');
+                showToast("ВЕРНО! ТОЧКА ВЗЯТА! 🚀");
+                if (inp) inp.value = '';
+
+                currentTeamProgress.score = (currentTeamProgress.score || 0) + 100;
+                currentTeamProgress.current_level = lvl + 1;
+
                 await supabase
                     .from('teams_progress')
-                    .update({ 
-                        current_level: currentTeamProgress.current_level, 
+                    .update({
                         score: currentTeamProgress.score,
+                        current_level: currentTeamProgress.current_level,
                         updated_at: new Date()
                     })
                     .eq('user_id', String(tgUser.id));
 
-                showToast("ВЕРНЫЙ КОД (+100 XP)!");
                 updateUI();
             } else {
-                tg.HapticFeedback.notificationOccurred('error');
-                showToast("ОШИБКА ДЕШИФРОВКИ!");
+                tg.HapticFeedback?.notificationOccurred('error');
+                showToast("НЕВЕРНЫЙ КОД!");
             }
         }
 
-        // Подсказка со списанием очков в базе
-        async function requestHint() {
-            const lvl = currentTeamProgress.current_level;
-            if (lvl >= questsList.length) return;
+        // 6. Рейтинг (лидерборд)
+        async function loadLeaderboard() {
+            const res = await supabase
+                .from('teams_progress')
+                .select('*')
+                .order('score', { ascending: false })
+                .limit(10);
 
-            if (currentTeamProgress.score >= 50) {
-                currentTeamProgress.score -= 50;
-                await supabase
-                    .from('teams_progress')
-                    .update({ score: currentTeamProgress.score })
-                    .eq('user_id', String(tgUser.id));
+            const container = document.getElementById('leaderboard-list');
+            if (!container) return;
 
-                tg.showPopup({ title: 'ПОДСКАЗКА', message: questsList[lvl].hint || 'Подсказка отсутствует' });
-                updateUI();
-            } else {
-                showToast("НУЖНО 50 XP ДЛЯ ПОДСКАЗКИ");
-            }
-        }
-
-        // 3. Создание квеста в облако (для организаторов)
-        async function saveQuestToCloud() {
-            const title = document.getElementById('adm-title').value.trim();
-            const desc = document.getElementById('adm-desc').value.trim();
-            const img = document.getElementById('adm-img').value.trim();
-            const code = document.getElementById('adm-code').value.trim();
-            const hint = document.getElementById('adm-hint').value.trim();
-
-            if (!title || !code) {
-                showToast("УКАЖИТЕ НАЗВАНИЕ И КОД!");
+            if (!res.data || res.data.length === 0) {
+                container.innerHTML = "Пока нет результатов";
                 return;
             }
 
-            const { error } = await supabase.from('quests').insert({
-                title,
-                description: desc,
-                image_url: img || null,
-                secret_code: code,
-                hint: hint,
-                author_id: String(tgUser.id),
-                author_name: tgUser.first_name || "Организатор"
-            });
+            let html = "";
+            for (let i = 0; i < res.data.length; i++) {
+                const t = res.data[i];
+                html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:6px 0; font-size:11px;">' +
+                        '<span>' + (i + 1) + '. <b>' + (t.team_name  "Команда") + '</b> (Точка ' + (t.current_level  0) + ')</span>' +
+                        '<span style="color:var(--accent-cyan); font-weight:bold;">' + (t.score || 0) + ' XP</span>' +
+                        '</div>';
+            }
+            container.innerHTML = html;
+        }
 
-            if (!error) {
-                showToast("КВЕСТ СОХРАНЕН В ОБЛАКЕ!");
-                document.getElementById('adm-title').value = '';
-                document.getElementById('adm-desc').value = '';
-                document.getElementById('adm-img').value = '';
-                document.getElementById('adm-code').value = '';
-                document.getElementById('adm-hint').value = '';
-                await loadQuests();
-                renderCloudQuestsList();
+        // 7. Профиль игрока
+        function renderProfile() {
+            const idEl = document.getElementById('profile-tg-id');
+            const nameEl = document.getElementById('profile-display-name');
+            const lvlEl = document.getElementById('profile-level');
+            const xpEl = document.getElementById('profile-xp');
+            const inp = document.getElementById('input-team-name');
+            const roleSel = document.getElementById('select-role');
+            const av = document.getElementById('profile-avatar-icon');
+            const badge = document.getElementById('profile-role-badge');
+
+            if (idEl) idEl.innerText = "ID: " + tgUser.id;
+            if (nameEl) nameEl.innerText = currentTeamProgress.team_name || "Сталкер";
+            if (lvlEl) lvlEl.innerText = (currentTeamProgress.current_level || 0) + 1;
+            if (xpEl) xpEl.innerText = currentTeamProgress.score || 0;
+            if (inp) inp.value = currentTeamProgress.team_name || "";
+
+            const savedRole = localStorage.getItem('player_role') || "🕵️‍♂️|Разведчик";
+            if (roleSel) roleSel.value = savedRole;
+            const parts = savedRole.split('|');
+            if (av && parts[0]) av.innerText = parts[0];
+            if (badge && parts[1]) badge.innerText = parts[1];
+        }
+
+        async function savePlayerProfile() {
+            const inp = document.getElementById('input-team-name');
+            const roleSel = document.getElementById('select-role');
+            const newName = inp ? inp.value.trim() : '';
+
+            if (!newName) {
+                showToast("ИМЯ НЕ МОЖЕТ БЫТЬ ПУСТЫМ!");
+                return;
+            }
+
+            if (roleSel) localStorage.setItem('player_role', roleSel.value);
+            showToast("СОХРАНЕНИЕ...");
+
+            const res = await supabase
+                .from('teams_progress')
+                .update({ 
+                    team_name: newName,
+                    updated_at: new Date()
+                })
+                .eq('user_id', String(tgUser.id));
+
+            if (!res.error) {
+                currentTeamProgress.team_name = newName;
+                tg.HapticFeedback?.notificationOccurred('success');
+                showToast("ПРОФИЛЬ ОБНОВЛЕН!");
+                renderProfile();
                 updateUI();
             } else {
                 showToast("ОШИБКА СОХРАНЕНИЯ");
             }
         }
 
-        // 4. Realtime синхронизация турнирной таблицы
-        function listenRealtime() {
-            supabase
-                .channel('public:teams_progress')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'teams_progress' }, () => {
-                    loadLeaderboard();
-                })
-                .subscribe();
-        }
+        // 8. Добавление точек организатором
+        async function addNewQuestPoint() {
+            const t = document.getElementById('new-q-title').value.trim();
+            const d = document.getElementById('new-q-desc').value.trim();
+            const img = document.getElementById('new-q-img').value.trim();
+            const hint = document.getElementById('new-q-hint').value.trim();
+            const code = document.getElementById('new-q-code').value.trim().toUpperCase();
 
-		async function loadLeaderboard() {
-            const result = await supabase
-                .from('teams_progress')
-                .select('*')
-                .order('score', { ascending: false })
-                .limit(10);
-
-            const data = result.data;
-            const container = document.getElementById('leaderboard-list');
-            if (!container) return;
-
-            if (!data || data.length === 0) {
-                container.innerHTML = "Пока нет результатов";
+            if (!t  !d  !code) {
+                showToast("ЗАПОЛНИТЕ НАЗВАНИЕ, ОПИСАНИЕ И КОД!");
                 return;
             }
 
-            let html = "";
-            for (let i = 0; i < data.length; i++) {
-                const t = data[i];
-                html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:6px 0; font-size:11px;">' +
-                        '<span>' + (i + 1) + '. <b>' + t.team_name + '</b> (Ур. ' + (t.current_level + 1) + ')</span>' +
-                        '<span style="color:var(--accent-cyan); font-weight:bold;">' + t.score + ' XP</span>' +
-                        '</div>';
-            }
-            container.innerHTML = html;
-        }
+            showToast("СОХРАНЕНИЕ ТОЧКИ...");
 
-        function updateUI() {
-            const scoreEl = document.getElementById('score-display');
-            const levelEl = document.getElementById('level-display');
-            if (scoreEl) scoreEl.innerText = "XP: " + currentTeamProgress.score;
-            if (levelEl) levelEl.innerText = "Уровень " + (currentTeamProgress.current_level + 1);
+            const res = await supabase
+                .from('quests')
+                .insert([{
+                    title: t,
+                    description: d,
+                    image_url: img || null,
+                    hint: hint || null,
+                    secret_code: code
+                }]);
 
-            const lvl = currentTeamProgress.current_level;
-            const imgWrap = document.getElementById('quest-img-wrapper');
-            const imgEl = document.getElementById('quest-image-display');
-
-            if (questsList.length === 0) {
-                document.getElementById('quest-title').innerText = "КВЕСТЫ НЕ НАЙДЕНЫ";
-                document.getElementById('quest-desc').innerText = "Организатор еще не добавил задания в базу.";
-                if (imgWrap) imgWrap.classList.add('hidden');
-                return;
-            }
-
-            if (lvl >= questsList.length) {
-                document.getElementById('quest-title').innerText = "ФИНИШ КВЕСТА!";
-                document.getElementById('quest-desc').innerText = "Вы дешифровали все точки города! Поздравляем!";
-                if (imgWrap) imgWrap.classList.add('hidden');
-                return;
-            }
-
-            const q = questsList[lvl];
-            document.getElementById('quest-title').innerText = q.title;
-            document.getElementById('quest-desc').innerText = q.description;
-
-            if (q.image_url && imgEl && imgWrap) {
-                imgEl.src = q.image_url;
-                imgWrap.classList.remove('hidden');
-            } else if (imgWrap) {
-                imgWrap.classList.add('hidden');
+            if (!res.error) {
+                showToast("ТОЧКА ДОБАВЛЕНА!");
+                document.getElementById('new-q-title').value = '';
+                document.getElementById('new-q-desc').value = '';
+                document.getElementById('new-q-img').value = '';
+                document.getElementById('new-q-hint').value = '';
+                document.getElementById('new-q-code').value = '';
+                await loadQuests();
+                renderCloudQuestsList();
+                updateUI();
+            } else {
+                showToast("ОШИБКА ДОБАВЛЕНИЯ");
             }
         }
 
@@ -443,8 +776,7 @@
                 box.innerHTML = "База пуста";
                 return;
             }
-
-            let html = "";
+			let html = "";
             for (let i = 0; i < questsList.length; i++) {
                 const q = questsList[i];
                 html += '<div style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);">' +
@@ -454,17 +786,27 @@
             box.innerHTML = html;
         }
 
+        // 9. Переключение экранов
         function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.screen').forEach(function(s) { s.classList.add('hidden'); });
 
             if (tab === 'game') {
                 document.getElementById('tab-game').classList.add('active');
-                document.getElementById('game-screen').classList.remove('hidden');
+                const now = Date.now();
+                if (QUEST_START_DATE && now < QUEST_START_DATE) {
+                    document.getElementById('countdown-screen').classList.remove('hidden');
+                } else {
+                    document.getElementById('game-screen').classList.remove('hidden');
+                }
             } else if (tab === 'lead') {
                 document.getElementById('tab-lead').classList.add('active');
                 document.getElementById('leaderboard-screen').classList.remove('hidden');
                 loadLeaderboard();
+            } else if (tab === 'profile') {
+                document.getElementById('tab-profile').classList.add('active');
+                document.getElementById('profile-screen').classList.remove('hidden');
+                renderProfile();
             } else if (tab === 'admin') {
                 document.getElementById('tab-admin').classList.add('active');
                 document.getElementById('admin-screen').classList.remove('hidden');
@@ -472,14 +814,26 @@
             }
         }
 
-        function showToast(text) {
-            const t = document.getElementById('toast');
-            t.innerText = text;
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 2500);
+        // 10. Realtime-подписка
+        function listenRealtime() {
+            supabase
+                .channel('public:teams_progress')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'teams_progress' }, function() {
+                    loadLeaderboard();
+                })
+                .subscribe();
+
+            supabase
+                .channel('public:quest_settings')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'quest_settings' }, async function() {
+                    await loadQuestSettings();
+                    startCountdown();
+                })
+                .subscribe();
         }
 
-        initApp();
+        // Запуск приложения
+        window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
