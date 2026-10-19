@@ -372,7 +372,7 @@
                 .subscribe();
         }
 
-        [19.10.2026 20:13] Евгений: async function loadLeaderboard() {
+		async function loadLeaderboard() {
             const result = await supabase
                 .from('teams_progress')
                 .select('*')
