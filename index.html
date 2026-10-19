@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Городской Квест</title>
-    <!-- Подключение библиотек -->
+    <title>Городской Квест // Cyberpunk</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: rgba(23, 32, 54, 0.7);
+            --bg-color: #030712;
+            --card-bg: rgba(6, 12, 26, 0.85);
             --accent-cyan: #00f2fe;
-            --accent-purple: #9d4edd;
-            --success-neon: #00ff88;
-            --text-main: #f8fafc;
-            --text-muted: #64748b;
-            --border-glow: rgba(0, 242, 254, 0.2);
+            --accent-purple: #d946ef;
+            --accent-red: #f43f5e;
+            --success-neon: #10b981;
+            --text-main: #f3f4f6;
+            --text-muted: #6b7280;
+            --border-glow: rgba(0, 242, 254, 0.25);
+            --border-glow-purple: rgba(217, 70, 239, 0.25);
         }
 
         * {
@@ -29,18 +30,55 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(0, 242, 254, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 90%, rgba(217, 70, 239, 0.08) 0%, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-bottom: 70px;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Заголовки и HUD */
+        .cyber-header {
+            margin: 16px;
+            padding: 12px 16px;
+            background: rgba(6, 12, 26, 0.9);
+            border: 1px solid var(--border-glow);
+            border-left: 3px solid var(--accent-cyan);
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cyber-header::before {
+            content: "";
+            position: absolute;
+            top: -1px; right: 10px;
+            width: 30px; height: 3px;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        .hud-system-text {
+            font-size: 11px;
+            font-family: monospace;
+            letter-spacing: 2px;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 8px rgba(0, 242, 254, 0.4);
+            text-transform: uppercase;
         }
 
         .screen {
-            padding: 16px;
+            padding: 0 16px 16px 16px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
             flex-grow: 1;
         }
 
@@ -48,81 +86,167 @@
             display: none !important;
         }
 
-        .header {
+        /* Глобальный кибер-стиль карточек (Chamfered) */
+        .cyber-card {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid var(--border-glow);
+            padding: 18px;
+            backdrop-filter: blur(8px);
+            /* Срезанные футуристические углы */
+            clip-path: polygon(
+                0 0, 
+                calc(100% - 15px) 0, 100% 15px, 
+                100% 100%, 
+                15px 100%, 0 calc(100% - 15px)
+            );
+            box-shadow: 
+                0 4px 24px rgba(0, 0, 0, 0.6),
+                inset 0 0 12px rgba(0, 242, 254, 0.03);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .cyber-card::after {
+            content: "";
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 15px; height: 15px;
+            background: var(--accent-cyan);
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+            opacity: 0.6;
+        }
+
+        /* Кнопки */
+        .cyber-btn {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(217, 70, 239, 0.15));
+            border: 1px solid var(--accent-cyan);
+            color: #fff;
+            padding: 14px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.1);
+            transition: all 0.2s;
+            clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+        }
+
+        .cyber-btn::before {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 242, 254, 0.3), transparent);
+            transition: all 0.4s ease;
+        }
+
+        .cyber-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 0 15px var(--accent-cyan);
+            border-color: #fff;
+        }
+
+        .cyber-btn:active::before {
+            left: 100%;
+        }
+
+        .cyber-btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-glow);
+            color: var(--text-main);
+            box-shadow: none;
+        }
+
+        /* Инпуты и Селекты */
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(4, 8, 16, 0.8);
+            border: 1px solid var(--border-glow);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-size: 12px;
+            font-family: monospace;
+            margin-bottom: 12px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(0, 242, 254, 0.2);
+        }
+
+        /* HUD ярлыки и статусы */
+        .hud-badge-live {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid var(--success-neon);
+            color: var(--success-neon);
+            font-size: 9px;
+            font-weight: bold;
+            font-family: monospace;
+            padding: 2px 6px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .hud-badge-wait {
+            background: rgba(219, 70, 239, 0.12);
+            border: 1px solid var(--accent-purple);
+            color: var(--accent-purple);
+            font-size: 9px;
+            font-weight: bold;
+            font-family: monospace;
+            padding: 2px 6px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 6px rgba(219, 70, 239, 0.2);
+        }
+
+        .hud-badge-danger {
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            font-size: 9px;
+            font-weight: bold;
+            font-family: monospace;
+            padding: 2px 6px;
+            border-radius: 3px;
+            box-shadow: 0 0 6px rgba(244, 63, 94, 0.2);
+        }
+
+        .hud-meta-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 14px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            border: 1px solid var(--border-glow);
             font-size: 11px;
-            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-family: monospace;
         }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 14px;
-            border: 1px solid var(--border-glow);
-            backdrop-filter: blur(10px);
-        }
-
-        .btn {
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            color: #fff;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: opacity 0.2s;
-        }
-
-        .btn:active {
-            opacity: 0.8;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border-glow);
-            color: var(--text-main);
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 10px 12px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-glow);
-            border-radius: 8px;
-            color: var(--text-main);
-            font-size: 12px;
-            font-family: inherit;
-            margin-bottom: 10px;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--accent-cyan);
-        }
-
+        /* Навигация (Футер) */
         .footer {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: rgba(11, 15, 25, 0.95);
-            backdrop-filter: blur(10px);
+            bottom: 0; left: 0; right: 0;
+            height: 72px;
+            background: rgba(3, 7, 18, 0.95);
+            backdrop-filter: blur(12px);
             border-top: 1px solid var(--border-glow);
             display: flex;
             justify-content: space-around;
             align-items: center;
             z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.8);
         }
 
         .tab-btn {
@@ -130,347 +254,528 @@
             border: none;
             color: var(--text-muted);
             font-size: 10px;
+            font-family: monospace;
             font-weight: bold;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             cursor: pointer;
+            width: 20%;
+            transition: color 0.2s;
         }
 
         .tab-btn.active {
             color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
         }
 
+        .tab-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+            transition: transform 0.2s;
+        }
+
+        .tab-btn.active svg {
+            filter: drop-shadow(0 0 5px var(--accent-cyan));
+            transform: translateY(-2px);
+        }
+
+        /* Специфические элементы (Каталог) */
+        .cyber-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .catalog-card {
+            border: 1px solid var(--border-glow);
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .catalog-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--accent-cyan), transparent);
+        }
+
+        .catalog-title {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin: 4px 0 8px 0;
+            text-transform: uppercase;
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.3), transparent);
+            margin: 10px 0;
+        }
+
+        /* Тосты */
         .toast {
             position: fixed;
-            top: 20px;
-            left: 50%;
+            top: 24px; left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(3, 7, 18, 0.95);
             border: 1px solid var(--accent-cyan);
             color: var(--accent-cyan);
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 4px;
             font-size: 11px;
+            font-family: monospace;
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
         }
 
         .toast.show {
             opacity: 1;
         }
+
+        .timer-warning {
+            color: var(--accent-red) !important;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.6; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 1. ЭКРАН ТАЙМЕРА И АНОНСА -->
-    <div id="countdown-screen" class="screen">
-        <div class="header">
-            <span style="color:var(--accent-cyan);">⚡ ГОРОДСКОЙ КВЕСТ: АНОНС</span>
-            <span style="color:var(--success-neon);">🟢 ГОТОВ К СТАРТУ</span>
+    <!-- HUD Хедер (глобальный) -->
+    <div class="cyber-header">
+        <div>
+            <div class="hud-system-text" id="hud-sub-label">SYSTEM // SELECT_MISSION</div>
+            <div style="font-size: 13px; font-weight: 900; letter-spacing: 0.5px;" id="hud-main-label">⚡ ОПЕРАЦИИ В СЕТИ</div>
         </div>
-
-        <div class="card" style="text-align: center; padding: 24px 14px;">
-            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">ДО СТАРТА ИГРЫ ОСТАЛОСЬ</div>
-            <div id="countdown-timer" style="font-size: 26px; font-weight: bold; color: var(--accent-cyan); letter-spacing: 2px;">
-                --:--:--
-            </div>
-            <div style="font-size: 9px; color: var(--text-muted); margin-top: 4px;">ДНЕЙ : ЧАСОВ : МИНУТ : СЕКУНД</div>
-        </div>
-
-        <div class="card">
-            <h3 style="color:var(--accent-purple); font-size: 12px; margin-bottom: 8px;">📢 БРИФИНГ И ПРАВИЛА</h3>
-            <p id="announcement-text" style="font-size: 11px; line-height: 1.5; color: #cbd5e1;">
-                Команды получают координаты и ориентиры контрольных точек. 
-                Доберитесь до локации, найдите секретный код и введите его в терминал.
-                Каждая точка открывает доступ к следующему заданию цепочки!
-            </p>
-        </div>
-
-        <div class="card" style="font-size: 11px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                <span style="color:var(--text-muted);">Игрок:</span>
-                <b id="lobby-captain-name">Загрузка...</b>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-                <span style="color:var(--text-muted);">Статус:</span>
-                <b style="color:var(--accent-cyan);" id="game-status-label">ОЖИДАНИЕ СТАРТА</b>
-            </div>
-        </div>
-
-        <button class="btn btn-secondary" onclick="forceStartGame()" style="margin-top:auto;">
-            ⏩ ВОЙТИ В КВЕСТ СЕЙЧАС (ТЕСТ)
-        </button>
+        <span id="catalog-user-badge" class="hud-badge-wait" style="text-shadow: none;">Сталкер</span>
     </div>
 
-    <!-- 2. ИГРОВОЙ ЭКРАН (ЛИНЕЙНАЯ ЦЕПОЧКА ТОЧЕК) -->
-    <div id="game-screen" class="screen hidden">
-        <div class="header">
-            <span id="level-display" style="color:var(--accent-cyan); font-weight:bold;">ТОЧКА 1 ИЗ ?</span>
-            <span id="score-display" style="color:var(--accent-purple); font-weight:bold;">XP: 0</span>
+    <!-- 0. КАТАЛОГ КВЕСТОВ -->
+    <div id="catalog-screen" class="screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px;">
+            <span style="font-size:10px; color:var(--text-muted); letter-spacing:1px; font-family: monospace;">МАРШРУТЫ ОПЕРАЦИЙ:</span>
+            <span style="font-size:9px; color:var(--accent-cyan); font-family: monospace;">NET://ONLINE</span>
         </div>
 
-        <!-- Карточка активной цели -->
-        <div id="active-quest-box" class="card">
+        <div id="games-list-container" class="cyber-grid">
+            <!-- Заполняется динамически -->
+        </div>
+    </div>
+
+    <!-- 1. ЭКРАН ТАЙМЕРА (СТАРТ) -->
+    <div id="countdown-screen" class="screen hidden">
+        <button class="cyber-btn cyber-btn-secondary" onclick="openGamesCatalog()" style="margin-bottom: 4px; padding: 10px;">
+            ⬅️ ВЕРНУТЬСЯ В КАТАЛОГ
+        </button>
+
+        <div class="cyber-card" style="text-align: center; border-color: var(--accent-purple);">
+            <div style="font-size: 11px; color: var(--text-muted); font-family: monospace; margin-bottom: 6px;">ДО СТАРТА ОСТАЛОСЬ:</div>
+            <div id="countdown-timer" style="font-size: 28px; font-weight: 900; color: var(--accent-purple); letter-spacing: 2px; font-family: monospace;">
+                --:--:--
+            </div>
+        </div>
+
+        <div class="cyber-card">
+            <h3 style="color:var(--accent-cyan); font-size: 12px; font-family: monospace; margin-bottom: 8px;">📢 СВОДКА И БРИФИНГ</h3>
+            <p id="announcement-text" style="font-size: 11px; line-height: 1.5; color: #cbd5e1;">
+                На каждую точку отведено фиксированное время! Не успели ввести код — точка сгорает, начисляется штраф, и игра принудительно переключает вас на следующий этап.
+            </p>
+        </div>
+
+        <div class="cyber-card" style="font-size: 11px; font-family: monospace;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="color:var(--text-muted);">КОМАНДА:</span>
+                <b id="lobby-captain-name">ОЖИДАНИЕ...</b>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:var(--text-muted);">СТАТУС:</span>
+                <b style="color:var(--accent-red);" id="game-status-label">ЖДИТЕ СИГНАЛА СТАРТА</b>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ИГРОВОЙ ЭКРАН -->
+    <div id="game-screen" class="screen hidden">
+        <div class="hud-meta-row">
+            <span id="level-display" style="color:var(--accent-cyan);">ТОЧКА 1 ИЗ ?</span>
+            <span id="score-display" style="color:var(--accent-purple);">XP: 0</span>
+        </div>
+
+        <button class="cyber-btn cyber-btn-secondary" onclick="openGamesCatalog()" style="padding: 10px;">
+            🔄 СМЕНИТЬ КВЕСТ
+        </button>
+
+        <!-- Таймер точки -->
+        <div class="cyber-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-color: rgba(0, 242, 254, 0.4);">
+            <span style="font-size:11px; color:#cbd5e1; font-family: monospace;">⏱️ ТАЙМЕР НА ТОЧКУ:</span>
+            <span id="point-timer-display" style="font-size:16px; font-weight:bold; color:var(--accent-cyan); letter-spacing:1px; font-family: monospace;">--:--</span>
+        </div>
+
+        <!-- Текущая цель -->
+        <div id="active-quest-box" class="cyber-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:10px; color:var(--accent-cyan); font-weight:bold;">🎯 ТЕКУЩАЯ ЦЕЛЬ</span>
-                <span style="font-size:10px; font-weight:bold; color:var(--accent-purple);">+100 XP</span>
+                <span style="font-size:10px; color:var(--accent-cyan); font-weight:bold; font-family: monospace;">🎯 ТЕКУЩАЯ ЦЕЛЬ</span>
+                <span id="point-limit-badge" style="font-size:9px; font-weight:bold; color:var(--text-muted); font-family: monospace;">Лимит: 15 мин</span>
             </div>
 
-            <h3 id="quest-title" style="color:var(--text-main); font-size:15px; margin-bottom:8px;">Загрузка точки...</h3>
+            <h3 id="quest-title" style="color:#fff; font-size:16px; font-weight: bold; margin-bottom:8px;">Загрузка...</h3>
             
             <p id="quest-desc" style="font-size:12px; color:#cbd5e1; line-height:1.45; margin-bottom:12px;">
-                Получение ориентиров...
+                Ориентиры...
             </p>
 
-            <div id="quest-img-wrapper" class="hidden" style="margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid var(--border-glow);">
+            <div id="quest-img-wrapper" class="hidden" style="margin-bottom:12px; border-radius:4px; overflow:hidden; border:1px solid var(--border-glow);">
                 <img id="quest-image-display" src="" alt="Ориентир" style="width:100%; max-height:220px; object-fit:cover; display:block;">
             </div>
-			<div id="quest-hint-box" class="hidden" style="background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:6px; font-size:11px; color:#94a3b8; margin-bottom:6px; border-left:2px solid var(--accent-cyan);">
-                💡 <b>Подсказка:</b> <span id="quest-hint-text"></span>
-            </div>
+
+            <!-- Контейнер для подсказок по таймеру -->
+            <div id="quest-hints-container" style="display:flex; flex-direction:column; gap:6px; margin-bottom:4px;"></div>
         </div>
 
         <!-- Ввод секретного шифра -->
-        <div id="quest-input-box" class="card">
-            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:6px;">КОД С ОБЪЕКТА</label>
-            <input type="text" id="code-input" placeholder="Введите код (например, CITY-101)" style="text-transform:uppercase;">
-            <button class="btn" onclick="submitCurrentPointCode()">⚡ ДЕШИФРОВАТЬ И ОТКРЫТЬ СЛЕДУЮЩУЮ</button>
+        <div id="quest-input-box" class="cyber-card">
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:6px; font-family: monospace;">КОД С ОБЪЕКТА</label>
+            <input type="text" id="code-input" placeholder="Введите код (например, CITY-101)">
+            <button class="cyber-btn" onclick="submitCurrentPointCode()">⚡ ВВЕСТИ КОД И ДАЛЬШЕ</button>
         </div>
 
-        <!-- Экран финиша всех точек -->
-        <div id="quest-finish-box" class="card hidden" style="text-align:center; padding:24px 14px;">
+        <!-- Финал игры -->
+        <div id="quest-finish-box" class="cyber-card hidden" style="text-align:center; padding:24px 14px;">
             <div style="font-size:40px; margin-bottom:10px;">🏆</div>
-            <h2 style="color:var(--accent-cyan); font-size:16px; margin-bottom:8px;">МАРШРУТ ПОЛНОСТЬЮ ПРОЙДЕН!</h2>
-            <p style="font-size:12px; color:#cbd5e1; line-height:1.5; margin-bottom:14px;">
-                Все точки города найдены и расшифрованы!
-            </p>
-            <button class="btn" onclick="switchTab('lead')">📊 ПОСМОТРЕТЬ ИТОГОВЫЙ ТОП</button>
+            <h2 style="color:var(--accent-cyan); font-size:16px; margin-bottom:8px; font-family: monospace;">МАРШРУТ ПРОЙДЕН!</h2>
+            
+            <div style="background:rgba(0,0,0,0.4); border-radius:4px; padding:12px; margin-bottom:14px; border:1px solid var(--border-glow);">
+                <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px; font-family: monospace;">ИТОГОВОЕ ВРЕМЯ:</div>
+                <div id="finish-total-time" style="font-size:24px; font-weight:bold; color:var(--success-neon); font-family: monospace;">00:00:00</div>
+                <div id="finish-penalty-info" style="font-size:10px; color:var(--accent-red); font-family: monospace; margin-top: 4px;">Штрафы: +0 мин</div>
+            </div>
+
+            <button class="cyber-btn" onclick="switchTab('lead')">📊 ТУРНИРНАЯ ТАБЛИЦА</button>
         </div>
 
-        <div class="card" style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;">
-            <span>Прогресс цепочки:</span>
+        <div class="cyber-card" style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; font-family: monospace; padding: 10px 14px;">
+            <span>ПРОГРЕСС ОПЕРАЦИИ:</span>
             <span id="route-progress-text" style="color:var(--accent-cyan); font-weight:bold;">0 / 0</span>
         </div>
     </div>
 
-    <!-- 3. ЭКРАН ТАБЛИЦЫ ЛИДЕРОВ -->
+    <!-- 3. ТАБЛИЦА ЛИДЕРОВ -->
     <div id="leaderboard-screen" class="screen hidden">
-        <div class="header">
-            <span style="color:var(--accent-cyan);">🏆 РЕЙТИНГ КОМАНД</span>
-            <span style="color:var(--text-muted);">TOP-10</span>
-        </div>
-        <div class="card">
-            <div id="leaderboard-list" style="display:flex; flex-direction:column; gap:6px;">
+        <div class="cyber-card">
+            <div id="leaderboard-list" style="display:flex; flex-direction:column; gap:8px;">
                 Загрузка результатов...
             </div>
         </div>
     </div>
 
-    <!-- 4. ЭКРАН ПРОФИЛЯ ИГРОКА -->
-    <div id="profile-screen" class="screen hidden">
-        <div class="header">
-            <span style="color:var(--accent-cyan);">👤 ДОСЬЕ ИГРОКА</span>
-            <span id="profile-tg-id" style="font-size:10px; color:var(--text-muted);">ID: ---</span>
+    <!-- 4. ШТРАФЫ -->
+    <div id="penalties-screen" class="screen hidden">
+        <div class="cyber-card" style="background:rgba(244, 63, 94, 0.05); border-color:var(--accent-red);">
+            <div style="font-size:11px; line-height:1.45; color: #fda4af;">
+                Штраф начисляется при истечении времени на поиск точки. Ненайденная точка сгорает, начисляется <b>+10 минут</b> к итоговому зачетному времени.
+            </div>
         </div>
 
-        <div class="card" style="text-align:center;">
-            <div id="profile-avatar-icon" style="font-size:42px; margin-bottom:6px;">🕵️‍♂️</div>
-            <h3 id="profile-display-name" style="color:var(--accent-cyan); font-size:14px; margin-bottom:4px;">Позывной</h3>
-            <div id="profile-role-badge" style="font-size:10px; color:var(--accent-purple); text-transform:uppercase; margin-bottom:12px;">Разведчик</div>
+        <div class="cyber-card">
+            <h4 style="font-size:11px; color:var(--text-muted); margin-bottom:10px; font-family: monospace;">ПРОСРОЧЕННЫЕ МАРШРУТЫ:</h4>
+            <div id="penalties-list" style="display:flex; flex-direction:column; gap:8px; font-family: monospace;">
+                Штрафы отсутствуют.
+            </div>
+        </div>
+    </div>
 
-            <div style="display:flex; justify-content:space-around; background:rgba(0,0,0,0.3); border-radius:8px; padding:10px; border:1px solid var(--border-glow);">
+    <!-- 5. ПРОФИЛЬ -->
+    <div id="profile-screen" class="screen hidden">
+        <div class="cyber-card" style="text-align:center;">
+            <div id="profile-avatar-icon" style="font-size:42px; margin-bottom:6px;">🕵️‍♂️</div>
+            <h3 id="profile-display-name" style="color:var(--accent-cyan); font-size:15px; font-weight:bold; margin-bottom:4px;">Позывной</h3>
+            <div id="profile-role-badge" class="hud-badge-wait" style="margin-bottom:12px;">Разведчик</div>
+
+            <div style="display:flex; justify-content:space-around; background:rgba(0,0,0,0.3); border-radius:4px; padding:12px; border:1px solid var(--border-glow); font-family: monospace;">
                 <div>
                     <div style="font-size:9px; color:var(--text-muted);">ТОЧКА</div>
                     <div id="profile-level" style="font-size:14px; font-weight:bold;">1</div>
                 </div>
                 <div>
-                    <div style="font-size:9px; color:var(--text-muted);">ОЧКИ XP</div>
+                    <div style="font-size:9px; color:var(--text-muted);">XP</div>
                     <div id="profile-xp" style="font-size:14px; font-weight:bold; color:var(--accent-cyan);">0</div>
                 </div>
                 <div>
-                    <div style="font-size:9px; color:var(--text-muted);">СТАТУС</div>
-                    <div style="font-size:12px; font-weight:bold; color:var(--success-neon);">АКТИВЕН</div>
+                    <div style="font-size:9px; color:var(--text-muted);">ШТРАФЫ</div>
+                    <div id="profile-penalties" style="font-size:14px; font-weight:bold; color:var(--accent-red);">0</div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <h4 style="font-size:11px; color:var(--accent-cyan); margin-bottom:10px;">✏️ РЕДАКТИРОВАТЬ ДАННЫЕ</h4>
+        <div class="cyber-card">
+            <h4 style="font-size:11px; color:var(--accent-cyan); margin-bottom:10px; font-family: monospace;">✏️ ИЗМЕНИТЬ ДАННЫЕ</h4>
 
-            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">НАЗВАНИЕ КОМАНДЫ / ПОЗЫВНОЙ</label>
-            <input type="text" id="input-team-name" placeholder="Введите позывной" maxlength="25">
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px; font-family: monospace;">ПОЗЫВНОЙ / КОМАНДА</label>
+            <input type="text" id="input-team-name" placeholder="Введите позывной">
 
-            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">СПЕЦИАЛИЗАЦИЯ</label>
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px; font-family: monospace;">СПЕЦИАЛИЗАЦИЯ</label>
             <select id="select-role">
-                <option value="🕵️‍♂️|Разведчик">🕵️‍♂️ Разведчик (Скорость поиска)</option>
-                <option value="💻|Кибер-Хакер">💻 Кибер-Хакер (Дешифровка кодов)</option>
+                <option value="🕵️‍♂️|Разведчик">🕵️‍♂️ Разведчик (Скорость)</option>
+                <option value="💻|Кибер-Хакер">💻 Кибер-Хакер (Дешифровка)</option>
                 <option value="🧭|Штурман">🧭 Штурман (Ориентирование)</option>
                 <option value="⚡|Инженер">⚡ Инженер (Оптимизация)</option>
             </select>
 
-            <button class="btn" onclick="savePlayerProfile()">💾 СОХРАНИТЬ ПРОФИЛЬ</button>
+            <button class="cyber-btn" onclick="savePlayerProfile()">💾 СОХРАНИТЬ</button>
         </div>
     </div>
 
-    <!-- 5. ЭКРАН ОРГАНИЗАТОРА (РЕДАКТОР) -->
+    <!-- 6. РЕДАКТОР -->
     <div id="admin-screen" class="screen hidden">
-        <div class="header">
-            <span style="color:var(--accent-purple);">⚙️ ПАНЕЛЬ ОРГАНИЗАТОРА</span>
+        <div class="cyber-card">
+            <h3 style="color:var(--accent-cyan); font-size:12px; margin-bottom:8px; font-family: monospace;">🎯 ВЫБОР РЕДАКТИРУЕМОЙ ИГРЫ</h3>
+            <select id="adm-game-select" onchange="onAdminSelectGame(this.value)"></select>
         </div>
 
-        <!-- Настройка таймера старта -->
-        <div class="card">
-            <h3 style="color:var(--accent-cyan); font-size:12px; margin-bottom:8px;">⏱️ НАСТРОЙКА СТАРТА ИГРЫ</h3>
-            
-            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">ДАТА И ВРЕМЯ НАЧАЛА</label>
-            <input type="datetime-local" id="adm-start-time" style="color-scheme: dark;">
-
-            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">ТЕКСТ БРИФИНГА</label>
-            <textarea id="adm-announcement-input" rows="2" placeholder="Введите правила и условия..."></textarea>
-
-            <button class="btn" onclick="saveQuestStartTime()">💾 УСТАНОВИТЬ ВРЕМЯ СТАРТА</button>
+        <div class="cyber-card">
+            <h3 style="color:var(--accent-cyan); font-size:12px; margin-bottom:8px; font-family: monospace;">✨ СОЗДАТЬ НОВЫЙ КВЕСТ</h3>
+            <input type="text" id="new-game-title" placeholder="Название игры">
+            <input type="text" id="new-game-id" placeholder="ID (night_city_1)">
+            <textarea id="new-game-desc" rows="2" placeholder="Правила и регламент"></textarea>
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px;">ВРЕМЯ СТАРТА</label>
+            <input type="datetime-local" id="new-game-start" style="color-scheme: dark;">
+            <button class="cyber-btn" onclick="createNewGame()">🚀 СОЗДАТЬ ИГРУ</button>
         </div>
 
-        <!-- Добавление новой точки -->
-        <div class="card">
-            <h3 style="color:var(--accent-cyan); font-size:12px; margin-bottom:8px;">➕ ДОБАВИТЬ НОВУЮ ТОЧКУ</h3>
+        <div class="cyber-card">
+            <h3 style="color:var(--accent-cyan); font-size:12px; margin-bottom:8px; font-family: monospace;">➕ ДОБАВИТЬ ТОЧКУ В КВЕСТ</h3>
             <input type="text" id="new-q-title" placeholder="Название точки (напр. Памятник)">
-            <textarea id="new-q-desc" rows="2" placeholder="Описание и где искать код"></textarea>
-            <input type="text" id="new-q-img" placeholder="Прямая ссылка на фото (URL)">
-            <input type="text" id="new-q-hint" placeholder="Подсказка (необязательно)">
-            <input type="text" id="new-q-code" placeholder="Секретный код для зачета" style="text-transform:uppercase;">
-            <button class="btn" onclick="addNewQuestPoint()">☁️ СОХРАНИТЬ ТОЧКУ В БАЗУ</button>
+            <textarea id="new-q-desc" rows="2" placeholder="Загадка и ориентиры"></textarea>
+            <input type="text" id="new-q-img" placeholder="URL фото-ориентира (необязательно)">
+            
+            <label style="font-size:10px; color:var(--text-muted); display:block; margin-bottom:4px; font-family: monospace;">ПОДСКАЗКИ С ТАЙМЕРАМИ ВЫДАЧИ</label>
+            <div id="adm-hints-creator-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;"></div>
+            <button type="button" class="cyber-btn cyber-btn-secondary" onclick="addHintFieldToAdmin()" style="margin-bottom:12px; padding:6px; font-size:9px;">
+                ➕ ДОБАВИТЬ ЕЩЁ ПОДСКАЗКУ
+            </button>
+
+            <input type="number" id="new-q-limit" placeholder="Лимит времени на точку (в минутах, по умолч. 15)" min="1">
+            <input type="text" id="new-q-code" placeholder="Секретный код с точки">
+            <button class="cyber-btn" onclick="addNewQuestPoint()">☁️ СОХРАНИТЬ ТОЧКУ</button>
         </div>
 
-        <div class="card">
-            <h4 style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">ТОЧКИ В БАЗЕ (ПО ПОРЯДКУ):</h4>
-            <div id="cloud-quest-list" style="font-size:11px; display:flex; flex-direction:column; gap:4px;">
-                Загрузка...
-            </div>
+        <div class="cyber-card">
+            <h4 style="font-size:11px; color:var(--text-muted); margin-bottom:8px; font-family: monospace;">ТОЧКИ В ИГРЕ:</h4>
+            <div id="cloud-quest-list" style="font-size:11px; display:flex; flex-direction:column; gap:4px; font-family: monospace;">Загрузка...</div>
         </div>
     </div>
 
-    <!-- НАВИГАЦИЯ (ФУТЕР) -->
+    <!-- ФУТЕР НАВИГАЦИИ -->
     <div class="footer">
-        <button class="tab-btn active" id="tab-game" onclick="switchTab('game')">ИГРА</button>
-        <button class="tab-btn" id="tab-lead" onclick="switchTab('lead')">ТОП</button>
-        <button class="tab-btn" id="tab-profile" onclick="switchTab('profile')">ПРОФИЛЬ</button>
-        <button class="tab-btn" id="tab-admin" onclick="switchTab('admin')">РЕДАКТОР</button>
+        <button class="tab-btn active" id="tab-game" onclick="switchTab('game')">
+            <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+            <span>ИГРА</span>
+        </button>
+        <button class="tab-btn" id="tab-lead" onclick="switchTab('lead')">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span>ТОП</span>
+        </button>
+        <button class="tab-btn" id="tab-penalty" onclick="switchTab('penalty')">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>ШТРАФЫ</span>
+        </button>
+        <button class="tab-btn" id="tab-profile" onclick="switchTab('profile')">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 12zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <span>ПРОФИЛЬ</span>
+        </button>
+        <button class="tab-btn" id="tab-admin" onclick="switchTab('admin')">
+            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+            <span>РЕДАКТОР</span>
+        </button>
     </div>
 
     <div id="toast" class="toast">Готово</div>
 
-    <!-- ОСНОВНОЙ СКРИПТ -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Данные проекта Supabase
         const SUPABASE_URL = "https://rlzjtnxxlwuyaxnmhbuh.supabase.co";
         const SUPABASE_KEY = "sb_publishable_IkTNtMC48k8dGfysNQoi7w_Gss24MKo";
-
-        // Присвоение без const во избежание конфликта имен CDN
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-		// Пользователь
-        const tgUser = tg.initDataUnsafe?.user || { id: "test_player_1", first_name: "Игрок Сталкер" };
-        let currentTeamProgress = { current_level: 0, score: 0 };
+
+        const tgUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : { id: "test_player_1", first_name: "Игрок Сталкер" };
+
+        let currentGameId = localStorage.getItem('selected_game_id') || null;
+        let availableGames = [];
         let questsList = [];
+        let currentTeamProgress = { current_level: 0, score: 0, penalty_count: 0, penalty_time_seconds: 0, penalties_history: [] };
+        
         let QUEST_START_DATE = null;
         let countdownInterval = null;
+        let pointTimerInterval = null;
 
         function showToast(text) {
             const t = document.getElementById('toast');
             if (!t) return;
             t.innerText = text;
             t.classList.add('show');
-            setTimeout(function() { t.classList.remove('show'); }, 2000);
+            setTimeout(function() { t.classList.remove('show'); }, 2200);
         }
 
-        // 1. Инициализация приложения
+        // 1. Инициализация
         async function initApp() {
             showToast("СВЯЗЬ С ОБЛАКОМ...");
-            await loadQuestSettings();
-            await loadQuests();
-            await loadPlayerProgress();
+            await loadGamesCatalog();
 
-            const capEl = document.getElementById('lobby-captain-name');
-            if (capEl) capEl.innerText = currentTeamProgress.team_name || (tgUser.first_name) || "Сталкер";
+            const badge = document.getElementById('catalog-user-badge');
+            if (badge) badge.innerText = tgUser.first_name || "Игрок";
 
-            const now = Date.now();
-            if (QUEST_START_DATE && now < QUEST_START_DATE) {
-                document.getElementById('game-screen').classList.add('hidden');
-                document.getElementById('countdown-screen').classList.remove('hidden');
-                startCountdown();
+            if (!currentGameId && availableGames.length > 0) {
+                openGamesCatalog();
+            } else if (currentGameId) {
+                await selectGame(currentGameId);
             } else {
-                startGameView();
+                openGamesCatalog();
             }
 
             listenRealtime();
         }
 
-        // 2. Настройки времени и брифинга
-        async function loadQuestSettings() {
-            const res = await supabase
-                .from('quest_settings')
+        // 2. Каталог игр
+        async function loadGamesCatalog() {
+            const { data, error } = await supabase
+                .from('games')
                 .select('*')
-                .eq('id', 'main')
-                .maybeSingle();
+                .order('created_at', { ascending: true });
 
-            if (res.data) {
-                QUEST_START_DATE = new Date(res.data.start_time).getTime();
-                const announceEl = document.getElementById('announcement-text');
-                if (announceEl && res.data.announcement_text) {
-                    announceEl.innerText = res.data.announcement_text;
-                }
-                const inputTime = document.getElementById('adm-start-time');
-                if (inputTime) {
-                    const localIso = new Date(QUEST_START_DATE - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-                    inputTime.value = localIso;
-                }
-                const inputAnn = document.getElementById('adm-announcement-input');
-                if (inputAnn && res.data.announcement_text) {
-                    inputAnn.value = res.data.announcement_text;
-                }
-            } else {
-                QUEST_START_DATE = Date.now() + 3600000;
+            if (!error && data) {
+                availableGames = data;
+                renderGamesCatalog();
+                renderAdminGameSelect();
             }
         }
 
-        async function saveQuestStartTime() {
-            const inputTime = document.getElementById('adm-start-time').value;
-            const ann = document.getElementById('adm-announcement-input').value.trim();
+        function renderGamesCatalog() {
+            const container = document.getElementById('games-list-container');
+            if (!container) return;
 
-            if (!inputTime) {
-                showToast("ВЫБЕРИТЕ ДАТУ И ВРЕМЯ!");
+            document.getElementById('hud-sub-label').innerText = "SYSTEM // SELECT_MISSION";
+            document.getElementById('hud-main-label').innerText = "⚡ ОПЕРАЦИИ В СЕТИ";
+
+            if (availableGames.length === 0) {
+                container.innerHTML = `
+                    <div class="cyber-card" style="text-align:center; padding:30px 14px; border-style: dashed;">
+                        <div style="font-size:28px; margin-bottom:8px;">📡</div>
+                        <div style="color:var(--accent-cyan); font-weight:bold; font-size:13px; margin-bottom:4px;">СИГНАЛЫ КВЕСТОВ НЕ ОБНАРУЖЕНЫ</div>
+                        <div style="color:var(--text-muted); font-size:11px;">Организатор еще не опубликовал активные миссии в базе.</div>
+                    </div>
+                `;
                 return;
             }
 
-            const targetIso = new Date(inputTime).toISOString();
-            showToast("СОХРАНЕНИЕ...");
+            let html = '';
+            for (let i = 0; i < availableGames.length; i++) {
+                const g = availableGames[i];
+                const startTimeMs = new Date(g.start_time).getTime();
+                const isLive = Date.now() >= startTimeMs;
 
-            const res = await supabase
-                .from('quest_settings')
-                .upsert({
-                    id: 'main',
-                    start_time: targetIso,
-                    announcement_text: ann || undefined
+                const startTimeStr = new Date(g.start_time).toLocaleString('ru-RU', { 
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
                 });
 
-            if (!res.error) {
-                QUEST_START_DATE = new Date(inputTime).getTime();
-                showToast("ВРЕМЯ СТАРТА ОБНОВЛЕНО!");
+                const statusBadge = isLive 
+                    ? '<span class="hud-badge-live">● LIVE / В ПРОЦЕССЕ</span>'
+                    : '<span class="hud-badge-wait">⏳ СТАРТ: ' + startTimeStr + '</span>';
+
+                html += `
+                    <div class="cyber-card catalog-card" onclick="selectGame('${g.id}')">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                            <div style="font-size:9px; color:var(--accent-cyan); letter-spacing:1px; font-weight:bold; font-family: monospace;">
+                                MISSION // 0${i + 1}
+                            </div>
+                            ${statusBadge}
+                        </div>
+
+                        <h3 class="catalog-title">${g.title}</h3>
+
+                        <div class="divider"></div>
+
+                        <div style="display:flex; gap:10px; font-size:10px; color:var(--text-muted); font-family:monospace; margin-bottom: 8px;">
+                            <span>Дибичость: <span style="color:var(--accent-cyan);">★★☆</span></span>
+                            <span>Решард: <span style="color:var(--accent-purple);">🛡️ 🏆</span></span>
+                        </div>
+
+                        <p style="font-size:11px; color:#cbd5e1; line-height:1.45; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                            ${g.description || 'Шифрованный городской маршрут без предварительного описания.'}
+                        </p>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; background:rgba(0,0,0,0.3); padding:8px 10px; border-radius:4px; border:1px solid rgba(0, 242, 254, 0.15); font-family: monospace;">
+                            <span style="color:var(--text-muted);">
+                                ID СЕТИ: <b style="color:#94a3b8;">${g.id}</b>
+                            </span>
+                            <span style="color:var(--accent-cyan); font-weight:bold; letter-spacing:1.5px; display:flex; align-items:center; gap:4px; font-size: 9px;">
+                                ПОДКЛЮЧИТЬСЯ ➔
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function openGamesCatalog() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (pointTimerInterval) clearInterval(pointTimerInterval);
+            document.querySelectorAll('.screen').forEach(function(s) { s.classList.add('hidden'); });
+            document.getElementById('catalog-screen').classList.remove('hidden');
+            document.getElementById('tab-game').classList.add('active');
+            renderGamesCatalog();
+        }
+
+        // 3. Выбор игры
+        async function selectGame(gameId) {
+            currentGameId = gameId;
+            localStorage.setItem('selected_game_id', gameId);
+
+            const activeGame = availableGames.find(function(g) { return g.id === gameId; });
+            if (activeGame) {
+                QUEST_START_DATE = new Date(activeGame.start_time).getTime();
+                const lTitle = document.getElementById('lobby-game-title');
+                const ann = document.getElementById('announcement-text');
+                const badge = document.getElementById('lead-game-badge');
+                if (lTitle) lTitle.innerText = activeGame.title;
+                if (ann) ann.innerText = activeGame.description || 'Правила квеста';
+                if (badge) badge.innerText = activeGame.title;
+            }
+
+            await loadQuests();
+            await loadPlayerProgress();
+
+            const capEl = document.getElementById('lobby-captain-name');
+            if (capEl) capEl.innerText = currentTeamProgress.team_name || (tgUser && tgUser.first_name) || "Сталкер";
+
+            const now = Date.now();
+            if (QUEST_START_DATE && now < QUEST_START_DATE) {
+                document.querySelectorAll('.screen').forEach(function(s) { s.classList.add('hidden'); });
+                document.getElementById('countdown-screen').classList.remove('hidden');
                 startCountdown();
             } else {
-                showToast("ОШИБКА СОХРАНЕНИЯ");
+                startGameView();
             }
         }
 
-        // 3. Таймер отсчета
+        // 4. Таймер старта игры
         function startCountdown() {
             if (countdownInterval) clearInterval(countdownInterval);
             const timerEl = document.getElementById('countdown-timer');
@@ -481,10 +786,16 @@
 
                 if (diff <= 0) {
                     clearInterval(countdownInterval);
+                    countdownInterval = null;
                     if (timerEl) timerEl.innerText = "00:00:00";
-                    document.getElementById('game-status-label').innerText = "ИГРА НАЧАЛАСЬ!";
-                    showToast("КВЕСТ НАЧАЛСЯ!");
-                    setTimeout(startGameView, 1000);
+                    const statusLbl = document.getElementById('game-status-label');
+                    if (statusLbl) {
+                        statusLbl.innerText = "ИГРА НАЧАЛАСЬ!";
+                        statusLbl.style.color = "var(--success-neon)";
+                    }
+                    tg.HapticFeedback?.notificationOccurred('success');
+                    showToast("СТАРТ ДАН! ПОЕХАЛИ! 🚀");
+                    setTimeout(startGameView, 1200);
                     return;
                 }
 
@@ -503,22 +814,33 @@
             countdownInterval = setInterval(tick, 1000);
         }
 
-        function startGameView() {
-            document.getElementById('countdown-screen').classList.add('hidden');
+        async function startGameView() {
+            document.querySelectorAll('.screen').forEach(function(s) { s.classList.add('hidden'); });
             document.getElementById('game-screen').classList.remove('hidden');
+
+            if (!currentTeamProgress.game_started_at) {
+                currentTeamProgress.game_started_at = new Date().toISOString();
+                currentTeamProgress.point_started_at = new Date().toISOString();
+                await supabase
+                    .from('teams_progress')
+                    .update({ 
+                        game_started_at: currentTeamProgress.game_started_at,
+                        point_started_at: currentTeamProgress.point_started_at 
+                    })
+                    .eq('user_id', String(tgUser.id))
+                    .eq('game_id', currentGameId);
+            }
+
             updateUI();
         }
 
-        function forceStartGame() {
-            if (countdownInterval) clearInterval(countdownInterval);
-            startGameView();
-        }
-
-        // 4. Загрузка квестов и прогресса игрока
+        // 5. Загрузка данных из Supabase
         async function loadQuests() {
+            if (!currentGameId) return;
             const res = await supabase
                 .from('quests')
                 .select('*')
+                .eq('game_id', currentGameId)
                 .order('created_at', { ascending: true });
 
             if (!res.error && res.data) {
@@ -527,29 +849,136 @@
         }
 
         async function loadPlayerProgress() {
+            if (!currentGameId) return;
             const res = await supabase
                 .from('teams_progress')
                 .select('*')
                 .eq('user_id', String(tgUser.id))
+                .eq('game_id', currentGameId)
                 .maybeSingle();
 
             if (res.data) {
                 currentTeamProgress = res.data;
+                if (!currentTeamProgress.penalties_history) currentTeamProgress.penalties_history = [];
             } else {
                 currentTeamProgress = {
                     user_id: String(tgUser.id),
-                    team_name: tgUser.first_name || "Сталкер",
+                    game_id: currentGameId,
+                    team_name: (tgUser && tgUser.first_name) || "Сталкер",
                     current_level: 0,
-                    score: 0
+                    score: 0,
+                    point_started_at: new Date().toISOString(),
+                    game_started_at: null,
+                    game_finished_at: null,
+                    penalty_count: 0,
+                    penalty_time_seconds: 0,
+                    penalties_history: []
                 };
-                await supabase.from('teams_progress').insert([currentTeamProgress]);
+                await supabase.from('teams_progress').upsert([currentTeamProgress]);
             }
         }
 
-        // 5. Пошаговое линейное отображение текущей цели
+        // 6. Таймер текущей точки и автоматический переход
+        function startPointTimer(timeLimitMinutes) {
+            if (pointTimerInterval) clearInterval(pointTimerInterval);
+            const timerEl = document.getElementById('point-timer-display');
+            if (!timerEl) return;
+
+            const lvl = currentTeamProgress.current_level || 0;
+            const cur = questsList[lvl];
+
+            const startedAt = currentTeamProgress.point_started_at ? new Date(currentTeamProgress.point_started_at).getTime() : Date.now();
+            const totalMs = (timeLimitMinutes || 15) * 60 * 1000;
+
+            async function tick() {
+                const now = Date.now();
+                const elapsed = now - startedAt;
+                const remaining = totalMs - elapsed;
+
+                if (cur && cur.hints_list) {
+                    checkAndRenderHints(cur.hints_list);
+                }
+
+                if (remaining <= 0) {
+                    clearInterval(pointTimerInterval);
+                    timerEl.innerText = "00:00";
+                    timerEl.classList.remove('timer-warning');
+                    await handlePointTimeout();
+                    return;
+                }
+
+                const mins = Math.floor(remaining / 60000);
+                const secs = Math.floor((remaining % 60000) / 1000);
+                const pad = n => String(n).padStart(2, '0');
+                timerEl.innerText = pad(mins) + ":" + pad(secs);
+
+                if (remaining < 120000) {
+                    timerEl.classList.add('timer-warning');
+                } else {
+                    timerEl.classList.remove('timer-warning');
+                }
+            }
+
+            tick();
+            pointTimerInterval = setInterval(tick, 1000);
+        }
+
+        // Автоматический пропуск точки при истечении времени
+        async function handlePointTimeout() {
+            tg.HapticFeedback?.notificationOccurred('error');
+            const lvl = currentTeamProgress.current_level || 0;
+            const currentPoint = questsList[lvl];
+            const pointTitle = currentPoint ? currentPoint.title : ('Точка ' + (lvl + 1));
+
+            showToast("ВРЕМЯ ВЫШЛО! НАЧИСЛЕН ШТРАФ ⚠️");
+
+            // Запись штрафа (+10 минут к зачетному времени)
+            currentTeamProgress.penalty_count = (currentTeamProgress.penalty_count || 0) + 1;
+            currentTeamProgress.penalty_time_seconds = (currentTeamProgress.penalty_time_seconds || 0) + 600; // 10 минут
+            
+            const penaltyItem = {
+                point_title: pointTitle,
+                point_index: lvl + 1,
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                penalty_text: "+10 минут штрафного времени"
+            };
+            if (!currentTeamProgress.penalties_history) currentTeamProgress.penalties_history = [];
+            currentTeamProgress.penalties_history.push(penaltyItem);
+
+            currentTeamProgress.current_level = lvl + 1;
+            currentTeamProgress.point_started_at = new Date().toISOString();
+
+            if (currentTeamProgress.current_level >= questsList.length) {
+                currentTeamProgress.game_finished_at = new Date().toISOString();
+            }
+
+            await supabase
+                .from('teams_progress')
+                .update({
+                    current_level: currentTeamProgress.current_level,
+                    point_started_at: currentTeamProgress.point_started_at,
+                    game_finished_at: currentTeamProgress.game_finished_at,
+                    penalty_count: currentTeamProgress.penalty_count,
+                    penalty_time_seconds: currentTeamProgress.penalty_time_seconds,
+                    penalties_history: currentTeamProgress.penalties_history,
+                    updated_at: new Date()
+                })
+                .eq('user_id', String(tgUser.id))
+                .eq('game_id', currentGameId);
+
+            updateUI();
+        }
+
+        // 7. Отрисовка текущей точки
         function updateUI() {
             const lvl = currentTeamProgress.current_level || 0;
             const total = questsList.length;
+
+            const activeGame = availableGames.find(g => g.id === currentGameId);
+            if (activeGame) {
+                document.getElementById('hud-sub-label').innerText = "MISSION // " + activeGame.id.toUpperCase();
+                document.getElementById('hud-main-label').innerText = "🎯 " + activeGame.title.toUpperCase();
+            }
 
             const scoreEl = document.getElementById('score-display');
             const levelEl = document.getElementById('level-display');
@@ -563,30 +992,40 @@
             if (progressEl) progressEl.innerText = lvl + " / " + total + " пройдено";
 
             if (total === 0) {
+                if (pointTimerInterval) clearInterval(pointTimerInterval);
                 if (levelEl) levelEl.innerText = "ОЖИДАНИЕ...";
-                document.getElementById('quest-title').innerText = "КВЕСТЫ НЕ НАЙДЕНЫ";
-                document.getElementById('quest-desc').innerText = "Организатор еще не добавил задания.";
+                document.getElementById('quest-title').innerText = "ТОЧКИ НЕ НАЙДЕНЫ";
+                document.getElementById('quest-desc').innerText = "В этой игре пока нет контрольных точек.";
                 document.getElementById('quest-img-wrapper').classList.add('hidden');
                 inputBox.classList.add('hidden');
+                activeBox.classList.remove('hidden');
+                finishBox.classList.add('hidden');
                 return;
             }
 
-            // Финиш: все точки пройдены
+            // Финиш маршрута
             if (lvl >= total) {
+                if (pointTimerInterval) clearInterval(pointTimerInterval);
                 if (levelEl) levelEl.innerText = "ФИНИШ";
                 activeBox.classList.add('hidden');
                 inputBox.classList.add('hidden');
                 finishBox.classList.remove('hidden');
+                renderFinishSummary();
                 return;
             }
 
             activeBox.classList.remove('hidden');
             inputBox.classList.remove('hidden');
             finishBox.classList.add('hidden');
-			const cur = questsList[lvl];
+
+            const cur = questsList[lvl];
             if (levelEl) levelEl.innerText = "ТОЧКА " + (lvl + 1) + " ИЗ " + total;
             document.getElementById('quest-title').innerText = (lvl + 1) + ". " + cur.title;
             document.getElementById('quest-desc').innerText = cur.description;
+
+            const limitBadge = document.getElementById('point-limit-badge');
+            const limitMins = cur.time_limit_minutes || 15;
+            if (limitBadge) limitBadge.innerText = "Лимит: " + limitMins + " мин";
 
             const imgWrap = document.getElementById('quest-img-wrapper');
             const imgEl = document.getElementById('quest-image-display');
@@ -597,13 +1036,29 @@
                 imgWrap.classList.add('hidden');
             }
 
-            const hintBox = document.getElementById('quest-hint-box');
-            const hintText = document.getElementById('quest-hint-text');
-            if (cur.hint && hintBox && hintText) {
-                hintText.innerText = cur.hint;
-                hintBox.classList.remove('hidden');
-            } else if (hintBox) {
-                hintBox.classList.add('hidden');
+            startPointTimer(limitMins);
+        }
+
+        // Подсчет итогового времени прохождения
+        function renderFinishSummary() {
+            const timeEl = document.getElementById('finish-total-time');
+            const penaltyEl = document.getElementById('finish-penalty-info');
+
+            const startMs = currentTeamProgress.game_started_at ? new Date(currentTeamProgress.game_started_at).getTime() : Date.now();
+            const endMs = currentTeamProgress.game_finished_at ? new Date(currentTeamProgress.game_finished_at).getTime() : Date.now();
+            
+            const pureSeconds = Math.max(0, Math.floor((endMs - startMs) / 1000));
+            const totalSecondsWithPenalties = pureSeconds + (currentTeamProgress.penalty_time_seconds || 0);
+
+            const hours = Math.floor(totalSecondsWithPenalties / 3600);
+            const minutes = Math.floor((totalSecondsWithPenalties % 3600) / 60);
+            const seconds = totalSecondsWithPenalties % 60;
+
+            const pad = function(n) { return String(n).padStart(2, '0'); };
+            if (timeEl) timeEl.innerText = pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
+            if (penaltyEl) {
+                const penMins = Math.floor((currentTeamProgress.penalty_time_seconds || 0) / 60);
+                penaltyEl.innerText = "Штрафы: " + (currentTeamProgress.penalty_count || 0) + " шт. (+" + penMins + " мин к зачёту)";
             }
         }
 
@@ -626,17 +1081,27 @@
                 showToast("ВЕРНО! ТОЧКА ВЗЯТА! 🚀");
                 if (inp) inp.value = '';
 
+                if (pointTimerInterval) clearInterval(pointTimerInterval);
+
                 currentTeamProgress.score = (currentTeamProgress.score || 0) + 100;
                 currentTeamProgress.current_level = lvl + 1;
+                currentTeamProgress.point_started_at = new Date().toISOString();
+
+                if (currentTeamProgress.current_level >= questsList.length) {
+                    currentTeamProgress.game_finished_at = new Date().toISOString();
+                }
 
                 await supabase
                     .from('teams_progress')
                     .update({
                         score: currentTeamProgress.score,
                         current_level: currentTeamProgress.current_level,
+                        point_started_at: currentTeamProgress.point_started_at,
+                        game_finished_at: currentTeamProgress.game_finished_at,
                         updated_at: new Date()
                     })
-                    .eq('user_id', String(tgUser.id));
+                    .eq('user_id', String(tgUser.id))
+                    .eq('game_id', currentGameId);
 
                 updateUI();
             } else {
@@ -645,19 +1110,97 @@
             }
         }
 
-        // 6. Рейтинг (лидерборд)
+        // Логика проверки и автоматического появления подсказок по таймеру
+        function checkAndRenderHints(hintsList) {
+            const container = document.getElementById('quest-hints-container');
+            if (!container) return;
+
+            if (!hintsList || hintsList.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const startedAt = currentTeamProgress.point_started_at ? new Date(currentTeamProgress.point_started_at).getTime() : Date.now();
+            const elapsedMs = Date.now() - startedAt;
+
+            let html = '';
+            hintsList.forEach((h, index) => {
+                const targetMs = h.delay_minutes * 60 * 1000;
+                const diffMs = targetMs - elapsedMs;
+
+                if (diffMs <= 0) {
+                    // Открыто
+                    html += `
+                        <div style="background:rgba(0, 242, 254, 0.08); padding:10px; border-radius:4px; font-size:11px; color:#f8fafc; border-left:3px solid var(--accent-cyan); animation:fadeIn 0.4s ease; margin-top: 6px;">
+                            <div style="font-size:9px; color:var(--accent-cyan); font-weight:bold; margin-bottom:4px; font-family: monospace;">💡 ПОДСКАЗКА #${index + 1} (ОТКРЫТА)</div>
+                            <div>${h.text}</div>
+                        </div>
+                    `;
+                } else {
+                    // Закрыто
+                    const remainingSec = Math.ceil(diffMs / 1000);
+                    const mins = Math.floor(remainingSec / 60);
+                    const secs = remainingSec % 60;
+                    const pad = n => String(n).padStart(2, '0');
+
+                    html += `
+                        <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:4px; font-size:11px; color:var(--text-muted); border-left:3px solid var(--text-muted); display:flex; justify-content:space-between; align-items:center; font-family: monospace; margin-top: 6px;">
+                            <span>🔒 Подсказка #${index + 1} заблокирована</span>
+                            <span style="font-weight:bold; color:var(--accent-purple); font-size:10px;">через ${pad(mins)}:${pad(secs)}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 8. Экран штрафов
+        function renderPenaltiesScreen() {
+            const list = document.getElementById('penalties-list');
+            const history = currentTeamProgress.penalties_history || [];
+            if (!list) return;
+
+            document.getElementById('hud-sub-label').innerText = "CRIMINAL_RECORD // WARNINGS";
+            document.getElementById('hud-main-label').innerText = "⚠️ ШТРАФЫ И ОТКЛОНЕНИЯ";
+
+            if (history.length === 0) {
+                list.innerHTML = '<div style="color:var(--success-neon); font-size:11px;">Штрафов нет! Все контрольные точки закрыты вовремя.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < history.length; i++) {
+                const p = history[i];
+                html += '<div style="background:rgba(255,255,255,0.02); border-left:3px solid var(--accent-red); padding:10px; border-radius:4px; font-size:11px; margin-bottom: 6px;">' +
+                        '<div style="display:flex; justify-content:space-between; margin-bottom:4px;">' +
+                            '<b style="color:#f8fafc;">' + p.point_title + '</b>' +
+                            '<span style="color:var(--text-muted);">' + p.time + '</span>' +
+                        '</div>' +
+                        '<span style="color:var(--accent-red); font-size:10px;">⚠️ Время истекло: ' + p.penalty_text + '</span>' +
+                        '</div>';
+            }
+            list.innerHTML = html;
+        }
+
+        // 9. Рейтинг
         async function loadLeaderboard() {
+            if (!currentGameId) return;
             const res = await supabase
                 .from('teams_progress')
                 .select('*')
+                .eq('game_id', currentGameId)
                 .order('score', { ascending: false })
                 .limit(10);
 
             const container = document.getElementById('leaderboard-list');
             if (!container) return;
 
+            document.getElementById('hud-sub-label').innerText = "LEADERS // COMPETITORS";
+            document.getElementById('hud-main-label').innerText = "🏆 СЕТЕВОЙ ТОП-10";
+
             if (!res.data || res.data.length === 0) {
-                container.innerHTML = "Пока нет результатов";
+                container.innerHTML = "Пока нет результатов для этого квеста";
                 return;
             }
 
@@ -667,30 +1210,41 @@
                 const teamTitle = t.team_name || "Команда";
                 const teamLvl = (t.current_level || 0) + 1;
                 const teamScore = t.score || 0;
+                const penalties = t.penalty_count || 0;
 
-                html += '<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:6px 0; font-size:11px;">' +
-                        '<span>' + (i + 1) + '. <b>' + teamTitle + '</b> (Точка ' + teamLvl + ')</span>' +
-                        '<span style="color:var(--accent-cyan); font-weight:bold;">' + teamScore + ' XP</span>' +
-                        '</div>';
+                html += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05); padding:10px 0; font-size:11px; font-family: monospace;">
+                        <div>
+                            <b>${i + 1}. ${teamTitle}</b> (Точка ${teamLvl})
+                            ${penalties > 0 ? `<div style="font-size:9px; color:var(--accent-red);">Штрафов: ${penalties}</div>` : ''}
+                        </div>
+                        <span style="color:var(--accent-cyan); font-weight:bold;">${teamScore} XP</span>
+                    </div>
+                `;
             }
             container.innerHTML = html;
         }
 
-        // 7. Профиль игрока
+        // 10. Профиль игрока
         function renderProfile() {
             const idEl = document.getElementById('profile-tg-id');
             const nameEl = document.getElementById('profile-display-name');
             const lvlEl = document.getElementById('profile-level');
             const xpEl = document.getElementById('profile-xp');
+            const penEl = document.getElementById('profile-penalties');
             const inp = document.getElementById('input-team-name');
             const roleSel = document.getElementById('select-role');
             const av = document.getElementById('profile-avatar-icon');
             const badge = document.getElementById('profile-role-badge');
 
+            document.getElementById('hud-sub-label').innerText = "PROFILE // OPERATOR_ID";
+            document.getElementById('hud-main-label').innerText = "👤 ЛИЧНОЕ ДОСЬЕ";
+
             if (idEl) idEl.innerText = "ID: " + tgUser.id;
             if (nameEl) nameEl.innerText = currentTeamProgress.team_name || "Сталкер";
             if (lvlEl) lvlEl.innerText = (currentTeamProgress.current_level || 0) + 1;
             if (xpEl) xpEl.innerText = currentTeamProgress.score || 0;
+            if (penEl) penEl.innerText = currentTeamProgress.penalty_count || 0;
             if (inp) inp.value = currentTeamProgress.team_name || "";
 
             const savedRole = localStorage.getItem('player_role') || "🕵️‍♂️|Разведчик";
@@ -732,13 +1286,118 @@
             }
         }
 
-        // 8. Добавление точек организатором
+        // 11. Панель редактора
+        function renderAdminGameSelect() {
+            const sel = document.getElementById('adm-game-select');
+            if (!sel) return;
+
+            let html = '';
+            for (let i = 0; i < availableGames.length; i++) {
+                const g = availableGames[i];
+                const isSelected = (g.id === currentGameId) ? 'selected' : '';
+                html += '<option value="' + g.id + '" ' + isSelected + '>' + g.title + ' (' + g.id + ')</option>';
+            }
+            sel.innerHTML = html;
+        }
+
+        async function onAdminSelectGame(gameId) {
+            currentGameId = gameId;
+            localStorage.setItem('selected_game_id', gameId);
+            await loadQuests();
+            renderCloudQuestsList();
+        }
+
+        async function createNewGame() {
+            const title = document.getElementById('new-game-title').value.trim();
+            const id = document.getElementById('new-game-id').value.trim().toLowerCase().replace(/\s+/g, '_');
+            const desc = document.getElementById('new-game-desc').value.trim();
+            const startVal = document.getElementById('new-game-start').value;
+
+            if (!title || !id) {
+                showToast("ВВЕДИТЕ НАЗВАНИЕ И ID ИГРЫ!");
+                return;
+            }
+
+            const startTimeIso = startVal ? new Date(startVal).toISOString() : new Date(Date.now() + 7200000).toISOString();
+            showToast("СОЗДАНИЕ ИГРЫ...");
+
+            const { error } = await supabase
+                .from('games')
+                .insert([{
+                    id: id,
+                    title: title,
+                    description: desc,
+                    start_time: startTimeIso
+                }]);
+
+            if (!error) {
+                showToast("ИГРА СОЗДАНА! 🚀");
+                document.getElementById('new-game-title').value = '';
+                document.getElementById('new-game-id').value = '';
+                document.getElementById('new-game-desc').value = '';
+                await loadGamesCatalog();
+                onAdminSelectGame(id);
+            } else {
+                showToast("ОШИБКА: " + error.message);
+            }
+        }
+
+        // Подсказки в админке
+        function addHintFieldToAdmin(defaultMinutes = 3, defaultText = '') {
+            const container = document.getElementById('adm-hints-creator-list');
+            if (!container) return;
+
+            const hintIndex = container.children.length + 1;
+            const hintRow = document.createElement('div');
+            hintRow.className = 'hint-admin-row';
+            hintRow.style.cssText = 'display:flex; gap:6px; align-items:center; background:rgba(0,0,0,0.3); padding:6px; border-radius:4px; border:1px solid var(--border-glow); margin-bottom: 6px;';
+
+            hintRow.innerHTML = `
+                <div style="flex:0 0 75px;">
+                    <span style="font-size:8px; color:var(--text-muted); display:block; font-family: monospace;">ЧЕРЕЗ (МИН)</span>
+                    <input type="number" class="hint-delay" value="${defaultMinutes}" min="1" max="180" style="margin:0; padding:6px; font-size:11px;">
+                </div>
+                <div style="flex:1;">
+                    <span style="font-size:8px; color:var(--text-muted); display:block; font-family: monospace;">ТЕКСТ ПОДСКАЗКИ #${hintIndex}</span>
+                    <input type="text" class="hint-text" placeholder="Текст ориентира..." value="${defaultText}" style="margin:0; padding:6px; font-size:11px;">
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:var(--accent-red); font-size:14px; cursor:pointer; padding:4px;">✖</button>
+            `;
+            container.appendChild(hintRow);
+        }
+
+        function resetAdminHintsCreator() {
+            const container = document.getElementById('adm-hints-creator-list');
+            if (container) {
+                container.innerHTML = '';
+                addHintFieldToAdmin(3, '');
+            }
+        }
+
         async function addNewQuestPoint() {
+            const targetGame = document.getElementById('adm-game-select') ? document.getElementById('adm-game-select').value : currentGameId;
+            if (!targetGame) {
+                showToast("СНАЧАЛА ВЫБЕРИТЕ ИГРУ!");
+                return;
+            }
+
             const t = document.getElementById('new-q-title').value.trim();
             const d = document.getElementById('new-q-desc').value.trim();
             const img = document.getElementById('new-q-img').value.trim();
-            const hint = document.getElementById('new-q-hint').value.trim();
+            const limit = parseInt(document.getElementById('new-q-limit').value) || 15;
             const code = document.getElementById('new-q-code').value.trim().toUpperCase();
+
+            const hintRows = document.querySelectorAll('.hint-admin-row');
+            const hints_list = [];
+            hintRows.forEach(row => {
+                const delayMins = parseInt(row.querySelector('.hint-delay').value) || 1;
+                const text = row.querySelector('.hint-text').value.trim();
+                if (text) {
+                    hints_list.push({ delay_minutes: delayMins, text: text });
+                }
+            });
+
+            hints_list.sort((a, b) => a.delay_minutes - b.delay_minutes);
 
             if (!t || !d || !code) {
                 showToast("ЗАПОЛНИТЕ НАЗВАНИЕ, ОПИСАНИЕ И КОД!");
@@ -750,10 +1409,12 @@
             const res = await supabase
                 .from('quests')
                 .insert([{
+                    game_id: targetGame,
                     title: t,
                     description: d,
                     image_url: img || null,
-                    hint: hint || null,
+                    hints_list: hints_list,
+                    time_limit_minutes: limit,
                     secret_code: code
                 }]);
 
@@ -762,8 +1423,9 @@
                 document.getElementById('new-q-title').value = '';
                 document.getElementById('new-q-desc').value = '';
                 document.getElementById('new-q-img').value = '';
-                document.getElementById('new-q-hint').value = '';
                 document.getElementById('new-q-code').value = '';
+                document.getElementById('new-q-limit').value = '';
+                resetAdminHintsCreator();
                 await loadQuests();
                 renderCloudQuestsList();
                 updateUI();
@@ -777,36 +1439,59 @@
             if (!box) return;
 
             if (questsList.length === 0) {
-                box.innerHTML = "База пуста";
+                box.innerHTML = "В этой игре точек пока нет.";
                 return;
             }
-			let html = "";
+
+            let html = "";
             for (let i = 0; i < questsList.length; i++) {
                 const q = questsList[i];
                 html += '<div style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);">' +
-                        '<b>' + (i + 1) + '. ' + q.title + '</b> (Код: ' + q.secret_code + ')' +
+                        '<b>' + (i + 1) + '. ' + q.title + '</b> (Лимит: ' + (q.time_limit_minutes || 15) + ' мин, Код: ' + q.secret_code + ')' +
                         '</div>';
             }
             box.innerHTML = html;
         }
 
-        // 9. Переключение экранов
+        // 12. Переключение вкладок с блокировкой по времени
         function switchTab(tab) {
+            const now = Date.now();
+            const isGameStarted = (QUEST_START_DATE && now >= QUEST_START_DATE);
+
+            if (tab === 'game') {
+                if (!currentGameId) {
+                    openGamesCatalog();
+                    return;
+                }
+
+                if (!isGameStarted) {
+                    tg.HapticFeedback?.notificationOccurred('warning');
+                    showToast("⛔ ВХОД ЗАКРЫТ ДО ОКОНЧАНИЯ ТАЙМЕРА!");
+                    
+                    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+                    document.getElementById('tab-game').classList.add('active');
+                    
+                    document.querySelectorAll('.screen').forEach(function(s) { s.classList.add('hidden'); });
+                    document.getElementById('countdown-screen').classList.remove('hidden');
+                    return;
+                }
+            }
+
             document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
             document.querySelectorAll('.screen').forEach(function(s) { s.classList.add('hidden'); });
 
             if (tab === 'game') {
                 document.getElementById('tab-game').classList.add('active');
-                const now = Date.now();
-                if (QUEST_START_DATE && now < QUEST_START_DATE) {
-                    document.getElementById('countdown-screen').classList.remove('hidden');
-                } else {
-                    document.getElementById('game-screen').classList.remove('hidden');
-                }
+                document.getElementById('game-screen').classList.remove('hidden');
+                updateUI();
             } else if (tab === 'lead') {
                 document.getElementById('tab-lead').classList.add('active');
                 document.getElementById('leaderboard-screen').classList.remove('hidden');
                 loadLeaderboard();
+            } else if (tab === 'penalty') {
+                document.getElementById('tab-penalty').classList.add('active');
+                document.getElementById('penalties-screen').classList.remove('hidden');
+                renderPenaltiesScreen();
             } else if (tab === 'profile') {
                 document.getElementById('tab-profile').classList.add('active');
                 document.getElementById('profile-screen').classList.remove('hidden');
@@ -814,11 +1499,14 @@
             } else if (tab === 'admin') {
                 document.getElementById('tab-admin').classList.add('active');
                 document.getElementById('admin-screen').classList.remove('hidden');
+                document.getElementById('hud-sub-label').innerText = "SYSTEM // EDITOR_MODE";
+                document.getElementById('hud-main-label').innerText = "⚙️ КИБЕР-РЕДАКТИРОВАНИЕ";
+                renderAdminGameSelect();
                 renderCloudQuestsList();
             }
         }
 
-        // 10. Realtime-подписка
+        // 13. Realtime
         function listenRealtime() {
             supabase
                 .channel('public:teams_progress')
@@ -828,15 +1516,13 @@
                 .subscribe();
 
             supabase
-                .channel('public:quest_settings')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'quest_settings' }, async function() {
-                    await loadQuestSettings();
-                    startCountdown();
+                .channel('public:games')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, async function() {
+                    await loadGamesCatalog();
                 })
                 .subscribe();
         }
 
-        // Запуск приложения
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
